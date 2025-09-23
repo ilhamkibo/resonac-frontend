@@ -1,12 +1,13 @@
 "use client";
 
 import mqtt, { MqttClient } from "mqtt";
+import { env } from "@/lib/env";
 
 let client: MqttClient | null = null;
 
 export function getMqttClient() {
   if (!client) {
-    client = mqtt.connect("ws://broker.emqx.io:8083/mqtt", {
+    client = mqtt.connect(env.mqttUrl, {
       reconnectPeriod: 2000, // reconnect tiap 2 detik
       connectTimeout: 5000,  // timeout koneksi 5 detik
       clientId: "nextjs-dashboard-" + Math.random().toString(16).substr(2, 8),

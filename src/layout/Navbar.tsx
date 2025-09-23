@@ -1,73 +1,91 @@
+"use client";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import { useState, useEffect } from "react";
+import { Maximize2, Minimize2 } from "lucide-react"; // 👈 tambahkan ini
 
 export default function Navbar() {
   const [showNav, setShowNav] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [isOpen, setIsOpen] = useState(false); // 👈 state tambahan
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false); // 👈 state fullscreen
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768); // md breakpoint Tailwind
+      setIsMobile(window.innerWidth < 768);
     };
 
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
-
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   useEffect(() => {
     if (isMobile) {
-      setShowNav(true); // kalau mobile, nav selalu muncul
+      setShowNav(true);
       return;
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (e.clientY <= 50) {
-        setShowNav(true);
-      } else if (e.clientY > 100) {
-        setShowNav(false);
-      }
+      if (e.clientY <= 50) setShowNav(true);
+      else if (e.clientY > 100) setShowNav(false);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [isMobile]);
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
   return (
     <nav
       className={`bg-white dark:bg-gray-900 fixed w-full z-20 top-0 left-0 border-b border-gray-200 dark:border-gray-600 transform transition-transform duration-500 ${
         showNav ? "translate-y-0" : "-translate-y-full"
-      } ${isMobile ? "mb-10" : ""} `}
+      } ${isMobile ? "mb-10" : ""}`}
     >
-      {/* <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4"> */}
       <div className="flex flex-wrap items-center justify-between mx-auto p-4">
         <a
-          href="https://flowbite.com/"
+          href="#"
           className="flex items-center space-x-3 rtl:space-x-reverse"
         >
           <img
             src="https://flowbite.com/docs/images/logo.svg"
             className="h-8"
-            alt="Flowbite Logo"
+            alt="Logo"
           />
           <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
             Flowbite
           </span>
         </a>
 
-        <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
+        <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse items-center">
+          {/* Tombol Fullscreen 👇 */}
           <button
+            onClick={toggleFullscreen}
+            className="p-2 rounded-lg hover:bg-gray-200 text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+          </button>
+
+          {/* <button
             type="button"
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 ml-3 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
           >
             Get started
-          </button>
+          </button> */}
+
           <div className="hidden md:block ml-3">
             <ThemeToggleButton />
           </div>
-          {/* 👇 ganti tombol hamburger jadi pakai setIsOpen */}
+
+          {/* 👇 tombol hamburger */}
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
@@ -92,7 +110,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* 👇 ubah hidden → toggle pakai isOpen */}
         <div
           className={`${
             isOpen ? "block" : "hidden"
@@ -103,7 +120,6 @@ export default function Navbar() {
               <a
                 href="#"
                 className="block py-2 px-3 text-white bg-blue-700 rounded-sm md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500"
-                aria-current="page"
               >
                 Home
               </a>
@@ -111,7 +127,7 @@ export default function Navbar() {
             <li>
               <a
                 href="#"
-                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
+                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white"
               >
                 About
               </a>
@@ -119,7 +135,7 @@ export default function Navbar() {
             <li>
               <a
                 href="#"
-                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
+                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white"
               >
                 Services
               </a>
@@ -127,7 +143,7 @@ export default function Navbar() {
             <li>
               <a
                 href="#"
-                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
+                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white"
               >
                 Contact
               </a>
@@ -135,7 +151,6 @@ export default function Navbar() {
             <li className="md:hidden ml-3">
               <ThemeToggleButton />
             </li>
-           
           </ul>
         </div>
       </div>

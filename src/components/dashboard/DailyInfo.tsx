@@ -34,16 +34,16 @@ export default function DailyInfo() {
     {/* <div className="grid grid-cols-2 md:grid-cols-3 items-center text-gray-600 dark:text-gray-200 gap-4 text-center bg-white dark:bg-white/[0.03] p-3 rounded-2xl border border-gray-200 dark:border-gray-700 text-xl"> */}
         {/* <div className="text-left">{day}</div> */}
         <div className="text-left">
-        <h1 className="font-semibold text-black text-lg md:text-2xl">
+        <h1 className="font-semibold text-black text-lg md:text-2xl dark:text-gray-400">
           Realtime Utility Monitoring
         </h1>
         </div>
         <div className="hidden xl:block text-center">
-          <h1 className="font-semibold text-black dark:text-white">DASHBOARD</h1>
+          <h1 className="font-semibold text-black dark:text-gray-400">DASHBOARD</h1>
         </div>
         <div className="text-right flex items-center gap-2 justify-end">
           <MqttListener />
-          <span className="font-semibold text-black dark:text-white text-lg  md:text-xl">
+          <span className="font-semibold text-black dark:text-gray-400 text-lg md:text-xl">
           {formattedTime}
           </span>
         </div>

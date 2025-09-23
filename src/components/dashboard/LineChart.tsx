@@ -17,7 +17,7 @@ function createInitialSeries(base: number, variance = 0.05): number[] {
   return Array.from({ length: 30 }, () => randAround(base, variance));
 }
 
-export default function MainAmpere() {
+export default function LineChart({ title }: { title: string }) {
   const [series, setSeries] = useState([
     { name: "R", data: createInitialSeries(110, 0.08) },
     { name: "S", data: createInitialSeries(115, 0.08) },
@@ -38,21 +38,21 @@ export default function MainAmpere() {
   }, []);
 
   const options: ApexOptions = {
-    chart: { type: "line", sparkline: { enabled: true }, height: 200 },
+    chart: { type: "line", sparkline: { enabled: true }, height: 140 },
     stroke: { width: 2, curve: "smooth" },
     colors: ["#2563eb", "#06b6d4", "#a78bfa"],
     tooltip: { enabled: true, theme: "light" },
   };
 
   return (
-    <div className="bg-slate-50 p-3 rounded-lg">
+    <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
       <div className="flex justify-between items-center mb-2">
-        <div className="text-sm font-medium">Ampere R-S-T</div>
-        <div className="text-xs text-slate-500" id="mainAmpSum">
+        <div className="text-sm font-medium dark:text-gray-200">{title}</div>
+        <div className="text-xs text-slate-500 dark:text-slate-400">
          {series[0].data[series[0].data.length - 1].toFixed(2)} A | {series[1].data[series[1].data.length - 1].toFixed(2)} A | {series[2].data[series[2].data.length - 1].toFixed(2)} A
         </div>
       </div>
-      <ReactApexChart options={options} series={series} type="line" height={200} />
+      <ReactApexChart options={options} series={series} type="line" height={140} />
     </div>
   );
 }

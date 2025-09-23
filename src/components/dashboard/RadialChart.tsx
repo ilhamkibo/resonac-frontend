@@ -8,7 +8,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function MainPowerFactor() {
+export default function RadialChart({ label, title }: { label: string; title: string }) {
   const [pfValue, setPfValue] = useState(75.55);
 
   // ✅ Update nilai PF tiap detik
@@ -23,9 +23,9 @@ export default function MainPowerFactor() {
   }, []);
 
   const mainPFOptions: ApexOptions = {
-    chart: { type: "radialBar", height: 200, sparkline: { enabled: true } },
+    chart: { type: "radialBar", height: 140, sparkline: { enabled: true } },
     series: [pfValue],
-    labels: ["PF"],
+    labels: [`${label}`],
     plotOptions: {
       radialBar: {
         hollow: { size: "70%" },
@@ -41,13 +41,13 @@ export default function MainPowerFactor() {
   };
 
   return (
-    <div className="bg-slate-50 p-3 rounded-lg text-center">
-      <div className="text-sm font-medium mb-1">Power Factor</div>
+    <div className="bg-slate-50 p-3 rounded-lg text-center dark:bg-slate-800">
+      <div className="text-sm font-medium mb-1 dark:text-gray-200">{title}</div>
       <ReactApexChart
         options={mainPFOptions}
         series={[pfValue]}
         type="radialBar"
-        height={200}
+        height={140}
       />
       {/* <div className="text-sm text-slate-500 mt-1">
         PF: {(pfValue / 100).toFixed(2)}
