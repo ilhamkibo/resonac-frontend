@@ -22,7 +22,8 @@ export default function AdminLayout({
     <div className="min-h-screen xl:flex">
      
       <div
-        className={`flex-1 transition-all  duration-300 ease-in-out `}
+        className={`flex-1 transition-all  duration-300 ease-in-out bg-gray-800`}
+        // className={`flex-1 transition-all  duration-300 ease-in-out bg-[#ddf1f5]`}
       >
         {/* Header */}
         <Navbar />

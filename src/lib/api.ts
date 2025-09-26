@@ -1,4 +1,14 @@
 import { env } from "./env";
+import axios from "axios";
+
+export const api = axios.create({
+  baseURL: env.BASE_URL,
+  withCredentials: true, // penting kalau API pakai cookie session
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export async function fetchChartData(endpoint: string, params?: Record<string, string>) {
   const url = new URL(`${env.BASE_URL}/${endpoint}`);

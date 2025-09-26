@@ -35,15 +35,15 @@ export default function DailyInfo() {
         {/* <div className="text-left">{day}</div> */}
         <div className="text-left">
         <h1 className="font-semibold text-black text-lg md:text-2xl dark:text-gray-400">
-          Realtime Utility Monitoring
+          <img src="/images/brand/resonac-clean.png" alt="" className="w-60 -ml-8"/>
         </h1>
         </div>
         <div className="hidden xl:block text-center">
-          <h1 className="font-semibold text-black dark:text-gray-400">DASHBOARD</h1>
+          <h1 className="font-semibold text-gray-300 dark:text-gray-400">Realtime Utility Monitoring</h1>
         </div>
         <div className="text-right flex items-center gap-2 justify-end">
           <MqttListener />
-          <span className="font-semibold text-black dark:text-gray-400 text-lg md:text-xl">
+          <span className="font-semibold text-gray-300 dark:text-gray-400 text-lg md:text-xl">
           {formattedTime}
           </span>
         </div>

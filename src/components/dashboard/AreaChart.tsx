@@ -50,7 +50,7 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
         enabled: true,
         allowMouseWheelZoom: false
       }, 
-      height: 140, toolbar: { show: false } 
+      height: 200, toolbar: { show: false } 
     },
     stroke: { curve: "smooth", width: 2 },
     xaxis: { labels: { show: false }, axisTicks: { show: false } },
@@ -60,7 +60,7 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
   };
 
   return (
-    <div className="bg-slate-50 px-3 rounded-lg lg:col-span-2 dark:bg-slate-800">
+    <>
       <div className="flex justify-between items-center mb-2">
         <div className="text-sm font-medium dark:text-gray-200">{title}</div>
         <div className="text-lg font-semibold dark:text-gray-400">
@@ -71,8 +71,9 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
         options={mainKWhOptions}
         series={series}
         type="area"
-        height={140}
+        height={200}
       />
-    </div>
+    </>
+    
   );
 }

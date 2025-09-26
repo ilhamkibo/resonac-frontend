@@ -17,8 +17,8 @@ export default function ValueCard({label}: {label: string}) {
   return (
     <div>
       <h1 className="text-lg text-gray-800 dark:text-gray-400">{label}</h1>
-      <div className="border dark:bg-gray-800 bg-white py-4 rounded-lg shadow">
-        <h1 className="text-center text-5xl font-bold text-gray-800 dark:text-gray-400">
+      <div className="border dark:bg-gray-800 bg-white py-1 rounded-lg shadow">
+        <h1 className="text-center text-4xl font-bold text-gray-800 dark:text-gray-400">
           {value}
         </h1>
       </div>

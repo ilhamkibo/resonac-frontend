@@ -41,7 +41,7 @@ export default function RadialChart({ label, title }: { label: string; title: st
   };
 
   return (
-    <div className="bg-slate-50 p-3 rounded-lg text-center dark:bg-slate-800">
+    <>
       <div className="text-sm font-medium mb-1 dark:text-gray-200">{title}</div>
       <ReactApexChart
         options={mainPFOptions}
@@ -49,9 +49,6 @@ export default function RadialChart({ label, title }: { label: string; title: st
         type="radialBar"
         height={140}
       />
-      {/* <div className="text-sm text-slate-500 mt-1">
-        PF: {(pfValue / 100).toFixed(2)}
-      </div> */}
-    </div>
+    </>
   );
 }

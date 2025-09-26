@@ -26,9 +26,10 @@ export default function OilTemperature() {
 
   // 🔹 Apex chart options
   const options: ApexOptions = {
-    chart: { type: "line", height: 180, animations: { enabled: false } }, // disable animasi biar smooth manual
+    chart: { type: "line", height: 200, animations: { enabled: false } ,    toolbar: { show: false }, // 🔹 matikan toolbar
+ }, // disable animasi biar smooth manual
     stroke: { curve: "smooth", width: 2 },
-    colors: ["#eab308"],
+    colors: ["#00a5c0"],
     xaxis: { categories },
   };
 
@@ -54,14 +55,20 @@ export default function OilTemperature() {
   }, []);
 
   return (
-    <>
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Oil Temperature</h2>
-        <span className="text-lg font-bold text-amber-600">
-          {series[0].data[series[0].data.length - 1]} °C
-        </span>
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      <div className="lg:col-span-4">
+        <div className="flex justify-between items-center mb-2">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Oil Temperature</h2>
+        </div>
+        <ReactApexChart options={options} series={series} type="line" height={200} />
       </div>
-      <ReactApexChart options={options} series={series} type="line" height={180} />
-    </>
+      <div className="col-span-1 flex flex-col justify-center w-full">
+        <h1 className="text-center ">        
+          <span className="text-6xl font-bold text-[#00a5c0]">
+            {series[0].data[series[0].data.length - 1]} °C
+          </span>
+        </h1>
+      </div>
+    </div>
   );
 }
