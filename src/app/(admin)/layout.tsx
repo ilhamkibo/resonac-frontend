@@ -1,6 +1,7 @@
 "use client";
 
 import { useSidebar } from "@/context/SidebarContext";
+import { WebSocketProvider } from "@/context/WebSocketContext";
 import Navbar from "@/layout/Navbar";
 import React from "react";
 
@@ -28,7 +29,11 @@ export default function AdminLayout({
         {/* Header */}
         <Navbar />
         {/* Page Content */}
-        <div className="p-4 mx-auto mt-18 md:mt-0 md:p-6 ">{children}</div>
+        <WebSocketProvider>  
+          <div className="p-4 mx-auto mt-18 md:mt-0 md:p-6 ">
+            {children}
+          </div>
+        </WebSocketProvider>
         {/* <div className="p-4 mx-auto max-w-(--breakpoint-2xl) mt-18 md:mt-0 md:p-6 ">{children}</div> */}
       </div>
     </div>

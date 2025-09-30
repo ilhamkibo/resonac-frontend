@@ -24,13 +24,32 @@ export default function OilTemperature() {
     Array.from({ length: 30 }, (_, i) => `${i}s`)
   );
 
+  const threshold = 73;
+
   // 🔹 Apex chart options
   const options: ApexOptions = {
-    chart: { type: "line", height: 200, animations: { enabled: false } ,    toolbar: { show: false }, // 🔹 matikan toolbar
- }, // disable animasi biar smooth manual
+    chart: { 
+      type: "line", 
+      height: 200, 
+      animations: { enabled: false } ,    
+      toolbar: { show: false }, // 🔹 matikan toolbar
+    }, // disable animasi biar smooth manual
     stroke: { curve: "smooth", width: 2 },
     colors: ["#00a5c0"],
     xaxis: { categories },
+    annotations: {
+      yaxis: [
+        {
+          y: threshold,
+          borderColor: "#FF0000",
+          label: {
+            borderColor: "#FF0000",
+            style: { color: "#fff", background: "#FF0000" },
+            text: `Max ${threshold}`,
+          },
+        },
+      ],
+    },
   };
 
   // 🔹 Update tiap 1 detik
