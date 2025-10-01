@@ -23,6 +23,7 @@
     "apexcharts": "^4.3.0",
     "autoprefixer": "^10.4.20",
     "axios": "^1.12.2",
+    "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",
     "lucide-react": "^0.544.0",
     "mqtt": "^5.14.1",
@@ -33,8 +34,10 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
+    "react-hot-toast": "^2.6.0",
     "swiper": "^11.2.0",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

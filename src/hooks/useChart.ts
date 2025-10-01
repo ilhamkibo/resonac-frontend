@@ -1,6 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { fetchChartData } from "@/lib/api";
+import { fetchChartData } from "@/lib/api-client";
 
 export function useChart(endpoint: string, params?: Record<string, string>) {
   return useQuery({

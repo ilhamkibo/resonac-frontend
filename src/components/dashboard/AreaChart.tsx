@@ -25,7 +25,7 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
 
   // ✅ State untuk chart series
   const [series, setSeries] = useState([
-    { name: "kWh", data: createInitialSeries(0.5, 0.6) },
+    { name: "bar", data: createInitialSeries(0.5, 0.6) },
   ]);
 
   // ✅ Update data tiap 1 detik
@@ -37,7 +37,7 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
         const newY = randAround(0.5, 0.6); // generate angka baru
 
         const newData = [...oldData.slice(1), { x: lastX + 1, y: newY }];
-        return [{ name: "kWh", data: newData }];
+        return [{ name: "bar", data: newData }];
       });
     }, 1000);
 
@@ -45,7 +45,8 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
   }, []);
 
   const mainKWhOptions: ApexOptions = {
-    chart: { type: "area", 
+    chart: { 
+      type: "line", 
       zoom: {
         enabled: true,
         allowMouseWheelZoom: false
@@ -54,7 +55,7 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
     },
     stroke: { curve: "smooth", width: 2 },
     xaxis: { labels: { show: false }, axisTicks: { show: false } },
-    tooltip: { y: { formatter: (v) => v + " kWh" } },
+    tooltip: { y: { formatter: (v) => v + " Bar" } },
     colors: ["#f97316"],
     fill: { opacity: 0.15 },
   };
@@ -70,7 +71,7 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
       <ReactApexChart
         options={mainKWhOptions}
         series={series}
-        type="area"
+        type="line"
         height={200}
       />
     </>

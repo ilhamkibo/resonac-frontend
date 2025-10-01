@@ -81,7 +81,6 @@ export default function SignInForm() {
                   <Input
                     placeholder="yourusername"
                     type="text"
-                    value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
@@ -93,7 +92,6 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
-                      value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
                     <span

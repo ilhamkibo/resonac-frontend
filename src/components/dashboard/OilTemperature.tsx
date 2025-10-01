@@ -2,41 +2,47 @@
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
+import { useMqtt } from "@/context/MqttContext";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
 export default function OilTemperature() {
-  function randomPoint(base: number, spread = 5) {
-    return +(base + (Math.random() * spread - spread / 2)).toFixed(2);
-  }
+  const { realtime } = useMqtt();
 
-  // 🔹 state untuk data chart
+  const MAX_POINTS = 50; // 🔹 batas max 50 data
+
   const [series, setSeries] = useState([
     {
       name: "Temperature",
-      data: Array.from({ length: 30 }, () => randomPoint(70)),
+      data: [],
     },
   ]);
 
-  const [categories, setCategories] = useState(
-    Array.from({ length: 30 }, (_, i) => `${i}s`)
-  );
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true); // 🔹 state untuk loading
 
-  const threshold = 73;
+  const threshold = 110;
 
-  // 🔹 Apex chart options
   const options: ApexOptions = {
     chart: { 
       type: "line", 
-      height: 200, 
-      animations: { enabled: false } ,    
-      toolbar: { show: false }, // 🔹 matikan toolbar
-    }, // disable animasi biar smooth manual
+      height: 200,
+      animations: { enabled: false },    
+      toolbar: { show: false },
+      zoom: { enabled: false },
+    },
     stroke: { curve: "smooth", width: 2 },
     colors: ["#00a5c0"],
-    xaxis: { categories },
+    xaxis: { 
+      categories,
+      labels: { rotate: -45 },
+    },
+    yaxis: {
+      min: 90,
+      max: 115,
+    },
     annotations: {
       yaxis: [
         {
@@ -52,39 +58,53 @@ export default function OilTemperature() {
     },
   };
 
-  // 🔹 Update tiap 1 detik
+  // 🔹 Update chart setiap kali ada data baru dari MQTT
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSeries((prev) => {
-        const newData = [...prev[0].data];
-        newData.push(randomPoint(70)); // tambah di depan
-        newData.shift(); // buang data lama
+    if (realtime?.oil?.temperature !== undefined) {
+      
+      const now = new Date().toLocaleTimeString("id-ID", { hour12: false });
+      
+      setSeries((prev: any) => {
+        const newData = [...prev[0].data, realtime.oil.temperature];
+        if (newData.length > MAX_POINTS) newData.shift();
         return [{ ...prev[0], data: newData }];
       });
-
+      
       setCategories((prev) => {
-        const last = parseInt(prev[prev.length - 1]) + 1;
-        const newCats = [...prev, `${last}s`];
-        newCats.shift();
+        const newCats = [...prev, now];
+        if (newCats.length > MAX_POINTS) newCats.shift();
         return newCats;
       });
-    }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+      setLoading(false); // 🔹 data pertama sudah datang → stop loading
+    }
+  }, [realtime?.oil?.temperature]);
+
+  // 🔹 tampilkan loading UI sebelum data MQTT pertama kali masuk
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[200px] col-span-5">
+        <p className="text-gray-500 dark:text-gray-400 animate-pulse">
+          Menunggu data Oil Temperature...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       <div className="lg:col-span-4">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Oil Temperature</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white">
+            Oil Temperature
+          </h2>
         </div>
         <ReactApexChart options={options} series={series} type="line" height={200} />
       </div>
       <div className="col-span-1 flex flex-col justify-center w-full">
         <h1 className="text-center ">        
           <span className="text-6xl font-bold text-[#00a5c0]">
-            {series[0].data[series[0].data.length - 1]} °C
+            {realtime?.oil?.temperature} °C
           </span>
         </h1>
       </div>

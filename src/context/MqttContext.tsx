@@ -1,66 +1,57 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import mqtt, { MqttClient } from "mqtt";
-import { env } from "@/lib/env";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import mqttService from "@/lib/mqtt-client"; // Impor service kita
+import { RealtimeData, LogsData } from "@/types/mqtt";
 
-type Message = {
-  topic: string;
-  payload: string;
-};
-
+// Tipe data tetap sama
 type MqttContextType = {
-  client: MqttClient | null;
-  messages: Message[];
-  publish: (topic: string, message: string) => void;
+  realtime: RealtimeData | null;
+  logs: LogsData | null;
   status: string;
 };
 
 const MqttContext = createContext<MqttContextType | undefined>(undefined);
 
-export const MqttProvider = ({ children }: { children: ReactNode }) => {
-  const [client, setClient] = useState<MqttClient | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+export const MqttProvider = ({ children }: { children: React.ReactNode }) => {
+  const [realtime, setRealtime] = useState<RealtimeData | null>(null);
+  const [logs, setLogs] = useState<LogsData | null>(null);
   const [status, setStatus] = useState("Disconnected");
 
   useEffect(() => {
-    const newClient = mqtt.connect(env.mqttUrl);
+    // Gunakan service untuk terhubung
+    mqttService.connect(
+      () => setStatus("Connected"),
+      () => setStatus("Disconnected"),
+      () => setStatus("Error ⚠️")
+    );
 
-    newClient.on("connect", () => setStatus("Connected"));
-    newClient.on("reconnect", () => setStatus("Reconnecting..."));
-    newClient.on("close", () => setStatus("Disconnected"));
-    newClient.on("error", () => setStatus("Error ⚠️"));
-
-    newClient.on("message", (topic, payload) => {
-        const msg = { topic, payload: payload.toString() };
-        console.log("📥 New MQTT message:", msg);  // ✅ log setiap pesan masuk
-        setMessages((prev) => [...prev, msg]);
+    // Gunakan service untuk subscribe
+    mqttService.subscribe("toho/resonac/value", (_, payload) => {
+      try {
+        const msg = JSON.parse(payload.toString());
+        setRealtime(msg.realtime);
+        setLogs(msg.logs);
+      } catch (e) {
+        console.error("Invalid MQTT payload", e);
+      }
     });
 
-    
-
-    // subscribe contoh topic
-    newClient.subscribe("ecommerce/sales");
-
-    setClient(newClient);
-
+    // Cleanup
     return () => {
-      newClient.end(true);
+      mqttService.disconnect();
     };
   }, []);
 
-  const publish = (topic: string, message: string) => {
-    if (client) client.publish(topic, message);
-  };
-
   return (
-    <MqttContext.Provider value={{ client, messages, publish, status }}>
+    <MqttContext.Provider value={{ realtime, logs, status }}>
       {children}
     </MqttContext.Provider>
   );
 };
 
-export const useMqttContext = () => {
+// Hook useMqtt tetap sama
+export const useMqtt = () => {
   const ctx = useContext(MqttContext);
-  if (!ctx) throw new Error("useMqttContext must be used inside MqttProvider");
+  if (!ctx) throw new Error("useMqtt must be used inside MqttProvider");
   return ctx;
 };
