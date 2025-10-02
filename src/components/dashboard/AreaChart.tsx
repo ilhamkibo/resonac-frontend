@@ -10,6 +10,9 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function AreaChart( {title, unit} : {title: string; unit: string}) {
+    const [mounted, setMounted] = useState(false);
+  
+
   function randAround(base: number, spread = 0.05) {
     const delta = (Math.random() * 2 - 1) * spread * base;
     return Math.max(0, +(base + delta).toFixed(2));
@@ -39,6 +42,7 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
         const newData = [...oldData.slice(1), { x: lastX + 1, y: newY }];
         return [{ name: "bar", data: newData }];
       });
+      setMounted(true);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -62,11 +66,8 @@ export default function AreaChart( {title, unit} : {title: string; unit: string}
 
   return (
     <>
-      <div className="flex justify-between items-center mb-2">
-        <div className="text-sm font-medium dark:text-gray-200">{title}</div>
-        <div className="text-lg font-semibold dark:text-gray-400">
-          {series[0].data[series[0].data.length - 1].y.toFixed(2)} {unit}
-        </div>
+      <div className="flex justify-center items-center mt-2">
+        <h1 className="text-lg font-medium dark:text-gray-200">{title}</h1>
       </div>
       <ReactApexChart
         options={mainKWhOptions}

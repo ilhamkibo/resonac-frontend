@@ -2,6 +2,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.bg-blue-10 {
+  background-color: #00a5c0;
+}
+
 @theme {
   --font-*: initial;
   --font-outfit: Outfit, sans-serif;

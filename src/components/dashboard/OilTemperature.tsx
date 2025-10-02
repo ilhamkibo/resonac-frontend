@@ -3,13 +3,17 @@ import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 import { useMqtt } from "@/context/MqttContext";
+import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
+import { RealtimeData } from "@/types/mqtt";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
 export default function OilTemperature() {
-  const { realtime } = useMqtt();
+  const mqttData  = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value")
+
+  const realtime = mqttData ?.realtime
 
   const MAX_POINTS = 50; // 🔹 batas max 50 data
 
@@ -78,15 +82,13 @@ export default function OilTemperature() {
 
       setLoading(false); // 🔹 data pertama sudah datang → stop loading
     }
-  }, [realtime?.oil?.temperature]);
+  }, [mqttData ]);
 
   // 🔹 tampilkan loading UI sebelum data MQTT pertama kali masuk
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[200px] col-span-5">
-        <p className="text-gray-500 dark:text-gray-400 animate-pulse">
-          Menunggu data Oil Temperature...
-        </p>
+        <p className="ml-4 text-gray-500 dark:text-gray-400 animate-pulse">Waiting for realtime data...</p>
       </div>
     );
   }

@@ -25,7 +25,6 @@ export type RealtimeData = {
   oil: OilData;
 };
 
-
 // --- Tipe untuk Data Logs ---
 
 // Tipe untuk satu entri log ampere
@@ -69,4 +68,10 @@ export type LogsData = {
 export type MqttPayload = {
   realtime: RealtimeData;
   logs: LogsData;
+};
+
+export type NotificationData = {
+  message: string;
+  status: "info" | "warning" | "error";
+  time?: string;
 };

@@ -1,6 +1,6 @@
 "use server";
 
-import { loginService } from "@/services/authService";
+import { loginService } from "@/lib/api/services/auth-service";
 import { setAuthCookie, clearAuthCookie } from "@/lib/auth";
 
 export async function loginAction(email: string, password: string) {

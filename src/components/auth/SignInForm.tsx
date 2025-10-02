@@ -1,14 +1,20 @@
 "use client";
-import Checkbox from "@/components/form/input/Checkbox";
+import React, { useState } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { Toaster, toast } from "sonner"; // Library notifikasi (opsional)
+
+import { LoginPayload, loginSchema } from "@/lib/validators/authSchema";
+import { authService } from "@/lib/api/services/authService"; // Pastikan path benar
+
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
-import Link from "next/link";
-import React, { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-
+import Checkbox from "@/components/form/input/Checkbox";
 // ✅ Contoh login action
 async function loginAction(username: string, password: string) {
   const res = await fetch("/api/auth/login", {
@@ -25,31 +31,42 @@ async function loginAction(username: string, password: string) {
 }
 
 export default function SignInForm() {
+    const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
 
+  // 1. Setup React Hook Form & Zod Resolver
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginPayload>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  // 2. Setup React Query Mutation untuk handle API call
   const mutation = useMutation({
-    mutationFn: () => loginAction(username, password),
-    onSuccess: (data) => {
-      if (data.success) {
-        router.push("/dashboard"); // redirect setelah login
-      } else {
-        alert(data.message);
-      }
+    mutationFn: (payload: LoginPayload) => {
+      console.log(payload);
+      return authService.login(payload);
     },
-    onError: (err: any) => {
-      alert(err.message);
+    onSuccess: () => {
+      toast.success("Login berhasil!");
+      // Redirect ke dashboard setelah login berhasil
+      router.push("/"); 
+      router.refresh(); // Memastikan server-side components di-refresh
+    },
+    onError: (error: any) => {
+      // Tampilkan pesan error dari API
+      const message = error.response?.data?.message || "Login gagal. Periksa kembali email dan password Anda.";
+      toast.error(message);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutation.mutate();
+  // 3. Fungsi yang dipanggil saat form di-submit dan valid
+  const onSubmit = (data: LoginPayload) => {
+    mutation.mutate(data);
   };
-
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -72,17 +89,22 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
-            <form onSubmit={handleSubmit}>
+         <form onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-6">
                 <div>
                   <Label>
-                    Username <span className="text-error-500">*</span>
+                    Email <span className="text-error-500">*</span>
                   </Label>
+                  {/* 5. Daftarkan input ke react-hook-form */}
                   <Input
-                    placeholder="yourusername"
-                    type="text"
-                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="youremail@example.com"
+                    type="email"
+                    {...register("email")} // Ganti onChange dengan register
                   />
+                  {/* Tampilkan error validasi */}
+                  {errors.email && (
+                    <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                  )}
                 </div>
                 <div>
                   <Label>
@@ -92,36 +114,34 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
-                      onChange={(e) => setPassword(e.target.value)}
+                      {...register("password")} // Ganti onChange dengan register
                     />
-                    <span
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
+                    <span onClick={() => setShowPassword(!showPassword)} className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"> 
+                      {showPassword ? (   
+                      <EyeIcon className="fill-gray-500 dark:fill-gray-400" />    
                       ) : (
                         <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
-                      )}
-                    </span>
+                      )}   
+                      </span>   
+                    </div>
+                  </div>  
+                  <div className="flex items-center justify-between">   
+                    <div className="flex items-center gap-3">   
+                      <Checkbox checked={isChecked} onChange={setIsChecked} />   
+                      <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">    
+                        Keep me logged in   
+                        </span>   
+                    </div>  
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Checkbox checked={isChecked} onChange={setIsChecked} />
-                    <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                      Keep me logged in
-                    </span>
-                  </div>
-                </div>
                 <div>
                   <Button
                     className="w-full"
                     size="sm"
                     type="submit"
-                    disabled={mutation.isLoading}
+                    // 6. Gunakan status dari useMutation
+                    disabled={mutation.isPending}
                   >
-                    {mutation.isLoading ? "Signing in..." : "Sign in"}
+                    {mutation.isPending ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
               </div>

@@ -1,16 +1,24 @@
 "use client";
 import React, { useState, useEffect }from 'react'
 
-export default function ValueCard({label, value}: {label: string; value?: number}) {
+type Props = {
+  label?: string;
+  value?: number;
+  style?: string;
+  size?: string;
+  fixed?: number;
+  color?: string;
+  unit?: string
+}
 
-
+export default function ValueCard({label, value, style, size="4xl", fixed=1, color="text-gray-800 dark:text-gray-300", unit}: Props) {
 
   return (
-    <div>
-      <h1 className="text-lg text-gray-800 dark:text-gray-400">{label}</h1>
-      <div className="border dark:bg-gray-800 bg-white py-1 rounded-lg shadow">
-        <h1 className="text-center text-4xl font-bold text-gray-800 dark:text-gray-400">
-          {Number(value).toFixed(2)}
+    <div className={style}>
+      <h1 className={`text-lg font-bold ${color}`}>{label}</h1>
+      <div className="border py-1 rounded-lg px-1.5 shadow">
+        <h1 className={`text-center text-${size} font-bold text-gray-800 dark:text-gray-300 `}>
+          {Number(value).toFixed(fixed)} {unit}
         </h1>
       </div>
     </div>
