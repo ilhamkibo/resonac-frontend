@@ -8,18 +8,13 @@ import PumpArea from "@/components/dashboard/PumpArea";
 export const metadata: Metadata = {
   title:
     "Utility Dashboard | Resonac Utility Monitoring",
-  description: "Resonac Realtime Utility Monitoring Dashboard",
-  icons: {
-    icon: "/favicon.ico",
-  }
+  description: "Resonac Realtime Utility Monitoring Dashboard"
 };
 
 export default function Page() {
   const pumps = [
     { key: "main", label: "Main Pump" },
     { key: "pilot", label: "Pilot Pump" },
-    // kalau mau tambah tinggal tambah aja
-    // { key: "cooling", label: "Cooling Pump" },
   ] as const;
 
   return (

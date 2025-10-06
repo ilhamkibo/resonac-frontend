@@ -75,3 +75,14 @@ export type NotificationData = {
   status: "info" | "warning" | "error";
   time?: string;
 };
+
+export interface AlertPayload {
+  topic: string;
+  message: string;
+  status?: string;
+  timestamp?: string;
+}
+
+export interface AlertItem extends AlertPayload {
+  id: string;
+}

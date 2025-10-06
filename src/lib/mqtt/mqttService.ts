@@ -16,8 +16,12 @@ class MqttService {
       throw new Error("NEXT_PUBLIC_MQTT_URL is not defined in your .env file");
     }
 
-    this.client = mqtt.connect(mqttUrl);
-
+    this.client = mqtt.connect(mqttUrl, {
+      reconnectPeriod: 5000, // coba reconnect setiap 5 detik
+      connectTimeout: 30_000, // waktu tunggu koneksi awal
+      clean: true, // buat session baru saat reconnect
+    });
+    
     // ✅ Daftarkan SATU listener global yang berfungsi sebagai router
     this.client.on("message", (topic, payload) => {
       // Dapatkan semua handler untuk topik yang masuk

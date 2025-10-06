@@ -4,6 +4,7 @@ import Providers from "./providers";
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { MqttProvider } from '@/context/MqttContext';
+import AlertNotif from '@/components/mqtt/AlertListener';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -22,6 +23,7 @@ export default function RootLayout({
             <SidebarProvider>
               <Providers>{children}</Providers>
             </SidebarProvider>
+            <AlertNotif />
           </MqttProvider>
         </ThemeProvider>
       </body>

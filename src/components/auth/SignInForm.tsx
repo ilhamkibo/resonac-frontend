@@ -47,7 +47,6 @@ export default function SignInForm() {
   // 2. Setup React Query Mutation untuk handle API call
   const mutation = useMutation({
     mutationFn: (payload: LoginPayload) => {
-      console.log(payload);
       return authService.login(payload);
     },
     onSuccess: () => {

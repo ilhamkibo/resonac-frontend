@@ -13,7 +13,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 export default function OilTemperature() {
   const mqttData  = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value")
 
-  const realtime = mqttData ?.realtime
+  const realtime = mqttData?.realtime
 
   const MAX_POINTS = 50; // 🔹 batas max 50 data
 
@@ -27,7 +27,7 @@ export default function OilTemperature() {
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true); // 🔹 state untuk loading
 
-  const threshold = 110;
+  const threshold = 81;
 
   const options: ApexOptions = {
     chart: { 
@@ -44,8 +44,8 @@ export default function OilTemperature() {
       labels: { rotate: -45 },
     },
     yaxis: {
-      min: 90,
-      max: 115,
+      min: 60,
+      max: 90,
     },
     annotations: {
       yaxis: [
