@@ -109,13 +109,10 @@ export default function DailyInfo() {
     if (notification) {
       setIsPlcError(true); // Tampilkan status error PLC
 
-      // Hapus timer sebelumnya jika ada (ini akan me-reset timeout setiap kali notif baru masuk)
       if (plcErrorTimer.current) {
         clearTimeout(plcErrorTimer.current);
       }
 
-      // Atur timer baru. Jika tidak ada notifikasi lagi selama 2.5 detik,
-      // kita anggap PLC sudah terhubung kembali dan sembunyikan pesan error.
       plcErrorTimer.current = setTimeout(() => {
         setIsPlcError(false);
       }, 2500); // 2.5 detik (sedikit lebih lama dari interval notifikasi 1 detik)
