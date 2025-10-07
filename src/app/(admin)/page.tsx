@@ -19,9 +19,6 @@ export default function Page() {
 
   return (
     <div>
-      <div className="mb-4">
-        <DailyInfo />
-      </div>
       <div className="mt-4 shadow-sm bg-white dark:bg-gray-800 p-4 rounded-xl">
         <OilTemperature />
       </div>

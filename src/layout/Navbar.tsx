@@ -132,6 +132,18 @@ export default function Navbar() {
             </li>
             <li>
               <a
+                href="/input-manual"
+                className={`block py-2 px-3 rounded-sm md:p-0 ${
+            pathname === "/input-manual"
+              ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
+              : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"
+          }`}
+              >
+                Input
+              </a>
+            </li>
+            <li>
+              <a
                 href="/history"
                 className={`block py-2 px-3 rounded-sm md:p-0 ${
             pathname === "/history"
@@ -142,6 +154,7 @@ export default function Navbar() {
                 Logs
               </a>
             </li>
+            
             {/* <li>
               <a
                 href="#"

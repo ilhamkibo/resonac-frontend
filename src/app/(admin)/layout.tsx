@@ -1,6 +1,7 @@
 "use client";
 
 import Loading from "@/components/common/Loading";
+import DailyInfo from "@/components/dashboard/DailyInfo";
 import { useSidebar } from "@/context/SidebarContext";
 import Navbar from "@/layout/Navbar";
 import React from "react";
@@ -30,6 +31,9 @@ export default function AdminLayout({
         <Navbar />
         {/* Page Content */}
             <div className="p-4 mx-auto mt-18 md:mt-0 md:p-6 ">
+                      <div className="mb-4">
+              <DailyInfo />
+</div>
               {children}
             </div>
         {/* <div className="p-4 mx-auto max-w-(--breakpoint-2xl) mt-18 md:mt-0 md:p-6 ">{children}</div> */}

@@ -9,21 +9,34 @@ export default function AlertNotif() {
   const mqttData = useMqttSubscription<AlertPayload>("mqtt/alert");
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
+  // Tambahkan alert baru setiap kali mqttData datang
   useEffect(() => {
     if (!mqttData) return;
 
-    setAlerts((prev) => {
-      const newAlert: AlertItem = {
-        ...mqttData,
-        id: crypto.randomUUID(),
-      };
+    const id = crypto.randomUUID();
+    const newAlert: AlertItem = { ...mqttData, id };
 
-      // Maksimal 3 notifikasi, hapus yang tertua jika lebih
+    setAlerts((prev) => {
       const updated = [newAlert, ...prev];
       if (updated.length > 3) updated.pop();
       return updated;
     });
   }, [mqttData]);
+
+  // Timer auto-hapus 30 detik untuk setiap alert
+  useEffect(() => {
+    if (alerts.length === 0) return;
+
+    // buat timer untuk setiap alert yang belum punya timer
+    const timers = alerts.map((alert) =>
+      setTimeout(() => {
+        setAlerts((prev) => prev.filter((a) => a.id !== alert.id));
+      }, 30000)
+    );
+
+    // bersihkan semua timer saat komponen unmount atau alert berubah
+    return () => timers.forEach((t) => clearTimeout(t));
+  }, [alerts]);
 
   const removeAlert = (id: string) => {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
@@ -47,8 +60,10 @@ export default function AlertNotif() {
                 : "bg-blue-50 border-blue-500 text-blue-700"
             }`}
           >
-            <div>
-              <p className="font-semibold text-sm">{alert.topic} {alert.timestamp}</p>
+            <div className="flex-1">
+              <p className="font-semibold text-sm">
+                {alert.topic} {alert.timestamp}
+              </p>
               <p className="text-sm">{alert.message}</p>
             </div>
             <button
