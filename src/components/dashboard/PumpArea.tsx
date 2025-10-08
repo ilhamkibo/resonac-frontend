@@ -54,8 +54,8 @@ export default function PumpArea({ type }: PumpAreaProps) {
       </div>
 
       {/* Bagian Oil Pressure */}
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="bg-slate-50 px-3 rounded-lg lg:col-span-4 dark:bg-slate-700">
+      <div className="mt-2 grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="bg-slate-50 px-3 rounded-lg lg:col-span-4 dark:bg-slate-800">
           <AreaChart title="Oil Pressure" unit="Bar" />
         </div>
         <div className="flex w-full items-center justify-center">

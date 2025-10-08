@@ -385,6 +385,8 @@ export default function Page() {
   const pilotValue = 5.3;
   const maxPressure = 10; // batas maksimal untuk gauge
 
+  //munculkan popup
+  const latestTemp =30;
 
   return (
     <div className="text-gray-800 dark:text-gray-200 p-6">
@@ -395,78 +397,93 @@ export default function Page() {
         </div>
 
         {/* STATISTIC CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 w-full max-w-2xl ml-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-gray-700 dark:text-gray-300 text-sm font-semibold uppercase tracking-wide">
-                    Oil Pressure Overview
-                    </h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 items-start">
+          {/* OIL PRESSURE OVERVIEW */}
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 w-full h-[340px] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-700 dark:text-gray-300 text-sm font-semibold uppercase tracking-wide">
+                Oil Pressure Overview
+              </h3>
+            </div>
+
+            {/* Gauges */}
+            <div className="grid grid-cols-2 gap-6 flex-1">
+              {/* MAIN */}
+              <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-xl h-full">
+                <div className="flex gap-2 items-center mb-1">
+                  <Gauge className="w-6 h-6 text-emerald-500" />
+                  <h1 className="text-sm font-medium text-gray-300">Main</h1>
                 </div>
+                <ReactApexChart
+                  options={gaugeOptions("", "#22c55e")}
+                  series={[(mainValue / maxPressure) * 100]}
+                  type="radialBar"
+                  height={200}
+                />
+                {/* <div className="text-lg font-semibold text-gray-100 mt-[-10px]">
+                  {mainValue.toFixed(1)} bar
+                </div> */}
+              </div>
 
-                {/* Gauges */}
-                <div className="grid grid-cols-2 gap-6">
-                    {/* MAIN */}
-                    <div className="flex flex-col items-center bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl">
-                    <div className="flex gap-2 items-center">
-                        <Gauge className="w-6 h-6 text-emerald-600" />
-                        <h1 className="text-xl">Main</h1>
-                    </div>
-                    <ReactApexChart
-                        options={gaugeOptions("", "#22c55e")}
-                        series={[(mainValue / maxPressure) * 100]}
-                        type="radialBar"
-                        height={230}
-                    />
-                    </div>
-
-                    {/* PILOT */}
-                    <div className="flex flex-col items-center bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl">
-                    <div className="flex gap-2 items-center">
-                        <Gauge className="w-6 h-6 text-blue-600" />
-                        <h1 className="text-xl">Pilot</h1>
-                    </div>
-                    <ReactApexChart
-                        options={gaugeOptions("", "#3b82f6")}
-                        series={[(pilotValue / maxPressure) * 100]}
-                        type="radialBar"
-                        height={230}
-                    />
-                    </div>
+              {/* PILOT */}
+              <div className="flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900/50 rounded-xl h-full">
+                <div className="flex gap-2 items-center mb-1">
+                  <Gauge className="w-6 h-6 text-blue-500" />
+                  <h1 className="text-sm font-medium text-gray-300">Pilot</h1>
                 </div>
+                <ReactApexChart
+                  options={gaugeOptions("", "#3b82f6")}
+                  series={[(pilotValue / maxPressure) * 100]}
+                  type="radialBar"
+                  height={200}
+                />
+                {/* <div className="text-lg font-semibold text-gray-100 mt-[-10px]">
+                  {pilotValue.toFixed(1)} bar
+                </div> */}
+              </div>
+            </div>
+          </div>
+
+          {/* OIL TEMPERATURE */}
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 w-full h-[340px] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-gray-700 dark:text-gray-300 text-sm font-semibold uppercase tracking-wide">
+                Oil Temperature
+              </h3>
             </div>
 
-            {/* REVENUE CARD */}
-            <div className="p-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm w-[250px] border dark:border-slate-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                Revenue
-            </div>
-
-            <div className="flex items-center justify-between mt-1 mb-2">
-                <div className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                $84,952
+            {/* Content */}
+            <div className="flex flex-col justify-between flex-1 bg-slate-50 dark:bg-slate-900/50 rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div className="text-4xl font-bold text-gray-100">{latestTemp}°C</div>
+                <div
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    latestTemp > 70
+                      ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"
+                      : latestTemp < 40
+                      ? "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400"
+                      : "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
+                  }`}
+                >
+                  {latestTemp > 70 ? "High" : latestTemp < 40 ? "Low" : "Normal"}
                 </div>
-                <div className="flex items-center text-emerald-500 text-sm font-medium">
-                <ArrowUpRight size={14} className="mr-1" /> +0.19%
-                </div>
-            </div>
+              </div>
 
-            <ReactApexChart
-                options={chartOptions}
-                series={chartSeries}
-                type="line"
-                height={60}
-            />
-
-            <div className="flex justify-between mt-2 text-sm text-gray-500 dark:text-gray-400">
-                <span>Direct visits</span>
-                <span className="font-semibold text-gray-800 dark:text-gray-100">
-                32.72%
-                </span>
+              <div className="w-full mt-4">
+                <ReactApexChart
+                  options={chartOptions}
+                  series={chartSeries}
+                  type="area"
+                  height={150}
+                />
+              </div>
             </div>
-            </div>
+          </div>
         </div>
 
+        
         {/* SAVE BUTTON */}
         <div className="my-6 text-center">
             <button className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition">
