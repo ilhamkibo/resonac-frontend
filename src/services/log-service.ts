@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { LogSchema } from "../../../validations/log";
+import { LogSchema } from "../validations/log";
 import { z } from "zod";
 
 export async function getLogs() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import mqttService from "@/lib/mqtt/mqttService";
+import mqttService from "@/services/mqtt/mqttService";
 import { useMqtt } from "@/context/MqttContext";
 
 // Tipe generic <T> agar hook ini bisa digunakan untuk berbagai bentuk data

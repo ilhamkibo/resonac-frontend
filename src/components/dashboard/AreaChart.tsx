@@ -138,7 +138,7 @@ export default function LineChart({
   return (
     <>
     {/* <div className="p-3 bg-[#1e293b] rounded-2xl shadow-md"> */}
-      <div className="text-center ">
+      <div className="text-center">
         <h1 className="text-lg font-semibold text-gray-100">{title}</h1>
       </div>
       {mounted && (

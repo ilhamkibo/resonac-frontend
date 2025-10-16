@@ -4,6 +4,8 @@ import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertItem, AlertPayload } from "@/types/mqtt";
+import { v4 as uuidv4 } from "uuid";
+
 
 export default function AlertNotif() {
   const mqttData = useMqttSubscription<AlertPayload>("mqtt/alert");
@@ -13,7 +15,7 @@ export default function AlertNotif() {
   useEffect(() => {
     if (!mqttData) return;
 
-    const id = crypto.randomUUID();
+    const id = uuidv4();
     const newAlert: AlertItem = { ...mqttData, id };
 
     setAlerts((prev) => {

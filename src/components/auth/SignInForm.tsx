@@ -7,8 +7,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner"; // Library notifikasi (opsional)
 
-import { LoginPayload, loginSchema } from "@/lib/validators/authSchema";
-import { authService } from "@/lib/api/services/authService"; // Pastikan path benar
+import { LoginPayload, loginSchema } from "@/validations/authSchema";
+import { authService } from "@/services/authService"; // Pastikan path benar
 
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";

@@ -1,5 +1,5 @@
-import { LoginPayload } from '@/lib/validators/authSchema';
-import api from '../api';
+import { LoginPayload } from '@/validations/authSchema';
+import api from '../lib/api/api';
 
 export const authService = {
   // Mengirim kredensial, server akan membalas dengan Set-Cookie header
