@@ -70,3 +70,11 @@
 
 // export default api;
 
+export function handleApiResponse<T>(response: any): T {
+  if (response.status !== "success") throw new Error(response.message);
+  return response.data as T;
+}
+
+export function handleApiError(error: any): string {
+  return error.response?.data?.message || error.message || "Unknown error";
+}

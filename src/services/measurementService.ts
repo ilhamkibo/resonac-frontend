@@ -1,8 +1,8 @@
-import api from "../lib/api/api";
+import { axiosInstance } from "@/lib/api/axios";
 
 export const measurementService = {
-    async getMeasurementsDashboardData() {
-        const response = await api.get('/measurements/dashboard');
+    async getMeasurementsDashboardData(area: string = "main") {
+        const response = await axiosInstance.get(`/measurements/dashboard?area=${area}`);
         return response.data;
     }
 } 

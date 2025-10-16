@@ -5,6 +5,9 @@ import AreaChart from "./AreaChart";
 import ValueCard from "../utils/ValueCard";
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { RealtimeData } from "@/types/mqtt";
+import { useQuery } from "@tanstack/react-query";
+import { measurementService } from "@/services/measurementService";
+import { thresholdService } from "@/services/thresholdService";
 
 type PumpAreaProps = {
   type: "main" | "pilot";
@@ -12,9 +15,19 @@ type PumpAreaProps = {
 
 export default function PumpArea({ type }: PumpAreaProps) {
 
-  const data = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value")
+  const { data,isLoading, isError} = useQuery({
+    queryKey: [`measurements-${type}`],
+    queryFn: () => measurementService.getMeasurementsDashboardData(type),
+  });
 
-  const pumpData = data?.realtime?.[type];
+  const { data: data2 ,isLoading: isLoading2, isError: isError2} = useQuery({
+    queryKey: [`thresholds-${type}`],
+    queryFn: () => thresholdService.getAllThreshold(type),
+  });
+
+  const dataMqtt = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value")
+
+  const pumpData = dataMqtt?.realtime?.[type];
 
   // const data = realtime?.[type]; // ambil data sesuai type
   if (!pumpData) {
@@ -59,7 +72,7 @@ export default function PumpArea({ type }: PumpAreaProps) {
           <AreaChart title="Oil Pressure" unit="Bar" />
         </div>
         <div className="flex w-full items-center justify-center">
-          <ValueCard value={pumpData?.oil_pressure} size="3xl" unit="Bar" fixed={0} />   
+          <ValueCard value={pumpData?.oil_pressure} size="4xl" unit="Bar" fixed={0} />   
         </div>
       </div>
   </div>

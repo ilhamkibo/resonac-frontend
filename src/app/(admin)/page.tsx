@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: "Resonac Realtime Utility Monitoring Dashboard"
 };
 
+
 export default function Page() {
 
   return (
