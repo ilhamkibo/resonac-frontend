@@ -11,33 +11,68 @@ import { thresholdService } from "@/services/thresholdService";
 
 type PumpAreaProps = {
   type: "main" | "pilot";
+  initialMeasurements: any;
+  initialThresholds: any;
 };
 
-export default function PumpArea({ type }: PumpAreaProps) {
+export default function PumpArea({ type, initialMeasurements, initialThresholds }: PumpAreaProps) {
 
-  const { data,isLoading, isError} = useQuery({
+  const { 
+    data: measurementData,
+    isLoading: isLoadingMeasurement, 
+  } = useQuery({
     queryKey: [`measurements-${type}`],
     queryFn: () => measurementService.getMeasurementsDashboardData(type),
+    initialData: initialMeasurements,
   });
 
-  const { data: data2 ,isLoading: isLoading2, isError: isError2} = useQuery({
+  const { 
+    data: thresholdData,
+    isLoading: isLoadingThreshold, 
+  } = useQuery({
     queryKey: [`thresholds-${type}`],
     queryFn: () => thresholdService.getAllThreshold(type),
+    initialData: initialThresholds,
   });
 
-  const dataMqtt = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value")
-
+  const dataMqtt = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value");
   const pumpData = dataMqtt?.realtime?.[type];
+  const [ampereSeries, setAmpereSeries] = useState<any[]>([]);
+  
+  useEffect(() => {
+    if (measurementData?.data?.length) {
+      const initialSeries = [
+        { name: 'R', data: measurementData.data.map((d: any) => [new Date(d.timestamp).getTime(), d.ampere_r]) },
+        { name: 'S', data: measurementData.data.map((d: any) => [new Date(d.timestamp).getTime(), d.ampere_s]) },
+        { name: 'T', data: measurementData.data.map((d: any) => [new Date(d.timestamp).getTime(), d.ampere_t]) }
+      ];
+      setAmpereSeries(initialSeries);
+    }
+  }, [measurementData]);
+  
+  useEffect(() => {
+    // Update real-time dari MQTT
+    if (pumpData) {
+      const now = new Date().getTime();
+      setAmpereSeries(prevSeries => {
+        // Logika untuk menambahkan data baru dan menghapus data lama
+        // (disesuaikan dengan kebutuhan Anda)
+        return prevSeries; 
+      });
+    }
+  }, [pumpData]);
 
-  // const data = realtime?.[type]; // ambil data sesuai type
-  if (!pumpData) {
+  // ✅ Ganti loading state awal agar bergantung pada query, bukan MQTT
+  if (isLoadingMeasurement || isLoadingThreshold) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-400px)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-        {/* <p className="ml-4">Waiting for realtime data...</p> */}
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white"></div>
       </div>
     );
   }
+
+  // Ambil nilai terbaru dari MQTT jika ada, jika tidak, dari data API terakhir
+  const latestData = pumpData ?? measurementData?.data?.[measurementData.data.length - 1];
 
   return (
     <div>

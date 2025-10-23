@@ -6,6 +6,8 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import { MqttProvider } from '@/context/MqttContext';
 import AlertNotif from '@/components/mqtt/AlertListener';
 import { Toaster } from "sonner";
+import { AuthModalProvider } from "@/context/AuthModalContext";
+import AuthModal from "@/components/auth/AuthModal";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -19,16 +21,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.className} bg-gray-900`} >
-        <ThemeProvider>
+        <AuthModalProvider>
           <MqttProvider>
-            <SidebarProvider>
-              <Providers>{children}</Providers>
-              <Toaster position="top-right" richColors />
-            </SidebarProvider>
-            <AlertNotif />
+            <ThemeProvider>
+              <SidebarProvider>
+                <Providers>
+                  {children}
+                  <AuthModal />
+                </Providers>
+                <Toaster position="top-right" richColors />
+              </SidebarProvider>
+              <AlertNotif />
+            </ThemeProvider>
           </MqttProvider>
-        </ThemeProvider>
-      </body>
+         {/* ✅ Pastikan modal selalu ter-render di level global */}
+        </AuthModalProvider>      </body>
     </html>
   );
 }

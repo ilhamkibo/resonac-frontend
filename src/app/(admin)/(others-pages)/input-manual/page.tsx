@@ -7,6 +7,7 @@ import SaveButton from "@/components/input-manual/SaveButton";
 import { AmpereCardGroup } from "@/components/input-manual/AmpereCardGroup";
 import { OilPressureCard } from "@/components/input-manual/OilPressureCard";
 import { OilTemperatureCard } from "@/components/input-manual/OilTemperatureCard";
+import { useAuth } from "@/hooks/useAuth";
 
 type Row = {
   id: number;
@@ -23,45 +24,19 @@ type Row = {
   oilTemp: number;
 };
 
+
 export default function Page() {
   const [pilotValue, setPilotValue] = useState<number>(5.5);
   const [tableData, setTableData] = useState<Row[]>([]);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  const handleSaveData = () => {
-    const now = new Date();
-    const timeString = now.toLocaleString("id-ID", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
 
-    const newEntry: Row = {
-      id: tableData.length + 1,
-      time: timeString,
-      oilPressMain: parseFloat(pilotValue.toFixed(1)),
-      oilPressPilot: parseFloat(pilotValue.toFixed(1)),
-      operator: "OperatorX",
-      mainR: 24.5,
-      mainS: 22.1,
-      mainT: 20.8,
-      pilotR: 23.8,
-      pilotS: 21.9,
-      pilotT: 19.6,
-      oilTemp: 40,
-    };
+  const initialTableData: Row[] = []; // contoh: await getHistoryData();
 
-    setTableData((prev) => [newEntry, ...prev].slice(0, 10)); // max 10 rows
-    setLastSaved(`${timeString} oleh OperatorX`);
-    toast.success("Data berhasil disimpan!");
-  };
 
   return (
     <div className="p-6">
-      <Toaster position="top-center" richColors />
 
       <div className="grid md:grid-cols-2 gap-4">
         <AmpereCardGroup
@@ -72,6 +47,7 @@ export default function Page() {
             { label: "T", value: 20.8 },
           ]}
         />
+
         <AmpereCardGroup
           title="Pilot Pump"
           data={[
@@ -89,7 +65,7 @@ export default function Page() {
       </div>
 
       <div className="mt-6">
-        <SaveButton onSave={handleSaveData} lastSavedText={lastSaved} />
+        <SaveButton initialData={initialTableData} />
       </div>
 
       <div className="mt-6">

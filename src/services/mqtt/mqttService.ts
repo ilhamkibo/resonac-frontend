@@ -2,10 +2,12 @@
 import mqtt, { MqttClient } from "mqtt";
 
 type MessageHandler = (payload: Buffer) => void;
+type ConnectionStatus = "Connected" | "Disconnected" | "Error" | "Connecting";
 
 class MqttService {
   private client: MqttClient;
   private topicHandlers: Map<string, Set<MessageHandler>>;
+  private status: ConnectionStatus = "Connecting";
 
   constructor() {
     this.topicHandlers = new Map();
@@ -30,6 +32,10 @@ class MqttService {
     });
   }
 
+  public getStatus(): ConnectionStatus {
+    return this.status;
+  }
+
   public connect(
     onConnect: () => void,
     onClose: () => void,
@@ -37,18 +43,24 @@ class MqttService {
     onReconnect?: () => void,
     onOffline?: () => void
   ) {
-    this.client.on("connect", onConnect);
-    this.client.on("close", onClose);
-    this.client.on("error", onError);
-
-    // ✅ Tambahan penting agar reconnect status bisa diketahui
-    this.client.on("reconnect", () => {
-      console.log("MQTT trying to reconnect...");
+    this.client.on("connect", () => {
+      this.status = "Connected";
+      onConnect();
+    });
+    this.client.on("close", () => {
+      this.status = "Disconnected";
+      onClose();
+    });
+    this.client.on("error", () => {
+      this.status = "Error";
+      onError(new Error("MQTT connection error"));
+    });
+   this.client.on("reconnect", () => {
+      this.status = "Connecting";
       if (onReconnect) onReconnect();
     });
-
     this.client.on("offline", () => {
-      console.warn("MQTT is offline");
+      this.status = "Disconnected";
       if (onOffline) onOffline();
     });
   }

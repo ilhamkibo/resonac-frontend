@@ -1,73 +1,83 @@
 "use client";
+
 import React, { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Toaster, toast } from "sonner"; // Library notifikasi (opsional)
+import { toast } from "sonner";
+import Cookies from 'js-cookie'; // ✅ 1. Impor js-cookie
 
-import { LoginPayload, loginSchema } from "@/validations/authSchema";
-import { authService } from "@/services/authService"; // Pastikan path benar
+// ✅ 1. Pastikan path dan nama impor sesuai dengan file validasi Anda
+import { LoginPayload, authSchema } from "@/validations/authSchema"; 
+import { authService } from "@/services/authService";
 
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Checkbox from "@/components/form/input/Checkbox";
-// ✅ Contoh login action
-async function loginAction(username: string, password: string) {
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
 
-  if (!res.ok) {
-    throw new Error("Login gagal");
-  }
-
-  return res.json();
-}
+// ❌ Fungsi loginAction ini tidak diperlukan dan dihapus
+// karena kita sudah menggunakan authService dan TanStack Query.
 
 export default function SignInForm() {
-    const router = useRouter();
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
-
-  // 1. Setup React Hook Form & Zod Resolver
+  
+  // ✅ 2. Setup React Hook Form & Zod Resolver (Sudah benar)
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginPayload>({
-    resolver: zodResolver(loginSchema),
+      resolver: zodResolver(authSchema),
+      // ✅ 2. Provide default values for all fields
+      defaultValues: {
+          email: "",
+          password: "",
+      },
   });
 
-  // 2. Setup React Query Mutation untuk handle API call
+  // ✅ 3. Setup React Query Mutation untuk handle API call
   const mutation = useMutation({
-    mutationFn: (payload: LoginPayload) => {
-      return authService.login(payload);
-    },
-    onSuccess: () => {
+    mutationFn: authService.login, // Langsung gunakan fungsi dari service
+    onSuccess: (response) => {
+      const { token } = response.data.data;
+      if (!token) {
+        toast.error("Login berhasil, tetapi token tidak diterima.");
+        return;
+      }
+
+      // ✅ 3. Simpan token secara manual di cookie
+      Cookies.set('accessToken', token, { 
+        expires: 1, // Cookie berlaku selama 1 hari
+        path: '/',
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production', // Hanya via HTTPS di produksi
+        sameSite: 'lax' // 'lax' adalah pilihan yang baik
+      });
+
       toast.success("Login berhasil!");
-      // Redirect ke dashboard setelah login berhasil
-      router.push("/"); 
-      router.refresh(); // Memastikan server-side components di-refresh
+      router.push("/"); // Ganti dengan path dashboard Anda, misal: "/dashboard"
+      router.refresh(); // Memastikan server-side components di-refresh jika perlu
     },
     onError: (error: any) => {
-      // Tampilkan pesan error dari API
-      const message = error.response?.data?.message || "Login gagal. Periksa kembali email dan password Anda.";
+      // Baris ini tidak lagi wajib jika Anda sudah punya error handler global di queryClient
+      const message = error.response?.data?.message || "Login gagal. Periksa kembali data Anda.";
       toast.error(message);
     },
   });
 
-  // 3. Fungsi yang dipanggil saat form di-submit dan valid
+  // Fungsi yang dipanggil saat form di-submit dan valid
   const onSubmit = (data: LoginPayload) => {
     mutation.mutate(data);
   };
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
+      {/* ... bagian header (Back to dashboard) ... */}
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
         <Link
           href="/"
@@ -77,6 +87,7 @@ export default function SignInForm() {
           Back to dashboard
         </Link>
       </div>
+
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
@@ -84,27 +95,28 @@ export default function SignInForm() {
               Sign In
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your username and password to sign in!
+              Enter your username or email and password to sign in!
             </p>
           </div>
           <div>
-         <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-6">
                 <div>
                   <Label>
-                    Email <span className="text-error-500">*</span>
+                    {/* ✅ 4. Ganti label menjadi lebih sesuai */}
+                    Email or Username <span className="text-error-500">*</span>
                   </Label>
-                  {/* 5. Daftarkan input ke react-hook-form */}
                   <Input
                     placeholder="youremail@example.com"
-                    type="email"
-                    {...register("email")} // Ganti onChange dengan register
+                    type="text" // ✅ Ganti type menjadi "text" agar bisa diisi username
+                    {...register("email")} // ✅ WAJIB: Ganti "email" menjadi "identifier"
                   />
-                  {/* Tampilkan error validasi */}
+                  {/* ✅ Tampilkan error untuk field "identifier" */}
                   {errors.email && (
                     <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
                   )}
                 </div>
+
                 <div>
                   <Label>
                     Password <span className="text-error-500">*</span>
@@ -113,31 +125,46 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
-                      {...register("password")} // Ganti onChange dengan register
+                      {...register("password")}
                     />
                     <span onClick={() => setShowPassword(!showPassword)} className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"> 
-                      {showPassword ? (   
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400" />    
+                      {showPassword ? ( 
+                        <EyeIcon className="fill-gray-500 dark:fill-gray-400" /> 
                       ) : (
                         <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
-                      )}   
-                      </span>   
-                    </div>
-                  </div>  
-                  <div className="flex items-center justify-between">   
-                    <div className="flex items-center gap-3">   
-                      <Checkbox checked={isChecked} onChange={setIsChecked} />   
-                      <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">    
-                        Keep me logged in   
-                        </span>   
-                    </div>  
+                      )}
+                    </span>
                   </div>
+                  {/* Tampilkan error untuk password */}
+                  {errors.password && (
+                    <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+                  )}
+                </div>
+
+               {/* <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Controller
+                      name="rememberMe"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                            // field.value is now guaranteed to be a boolean
+                            checked={field.value}
+                            onChange={field.onChange}
+                        />
+                      )}
+                  />
+                  <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
+                    Keep me logged in
+                  </span>
+                </div>
+              </div> */}
+
                 <div>
                   <Button
                     className="w-full"
                     size="sm"
                     type="submit"
-                    // 6. Gunakan status dari useMutation
                     disabled={mutation.isPending}
                   >
                     {mutation.isPending ? "Signing in..." : "Sign in"}
@@ -145,15 +172,7 @@ export default function SignInForm() {
                 </div>
               </div>
             </form>
-
-            <div className="mt-5">
-              <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                If you are not a member, please contact the{" "}
-                <span className="font-semibold text-brand-500 dark:text-brand-400">
-                  Admin
-                </span>.
-              </p>
-            </div>
+            {/* ... bagian footer (contact admin) ... */}
           </div>
         </div>
       </div>

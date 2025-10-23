@@ -7,22 +7,28 @@ import { RealtimeData } from "@/types/mqtt";
 import { useQuery } from "@tanstack/react-query";
 import { measurementService } from "@/services/measurementService";
 import { thresholdService } from "@/services/thresholdService";
+import { measurementData } from "@/types/measurementType";
+import { thresholdData } from "@/types/thresholdType";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function OilTemperature() {
+type OilTemperatureProps = {
+  initialMeasurements: measurementData[];
+  initialThresholds: thresholdData[];
+};
+
+export default function OilTemperature({ initialMeasurements, initialThresholds }: OilTemperatureProps) {
   // ====== HOOKS & STATE ======
   const mqttData = useMqttSubscription<{ realtime: RealtimeData }>("toho/resonac/value");
   const realtime = mqttData?.realtime;
 
+  // State untuk data chart
   const [series, setSeries] = useState([{ name: "Temperature", data: [] as number[] }]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [initialized, setInitialized] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   const MAX_POINTS = 50;
 
-  // ====== FETCH INITIAL DATA ======
+  // ✅ 2. Gunakan 'initialData' untuk menghidrasi TanStack Query
   const {
     data: measurementData,
     isLoading: isLoadingMeasurements,
@@ -30,6 +36,7 @@ export default function OilTemperature() {
   } = useQuery({
     queryKey: ["measurements-oil"],
     queryFn: () => measurementService.getMeasurementsDashboardData("oil"),
+    initialData: initialMeasurements,
   });
 
   const {
@@ -39,41 +46,37 @@ export default function OilTemperature() {
   } = useQuery({
     queryKey: ["thresholds-oil"],
     queryFn: () => thresholdService.getAllThreshold("oil"),
+    initialData: initialThresholds,
   });
 
-  // ====== INITIALIZE CHART WITH BACKEND DATA ======
+  // ✅ 3. Sederhanakan useEffect untuk inisialisasi chart
+  // Efek ini sekarang hanya berjalan sekali saat 'measurementData' pertama kali tersedia.
   useEffect(() => {
-    if (!measurementData?.data?.length || initialized) return;
+    if (measurementData?.data?.length) {
+      const temps = measurementData.data.map((item: measurementData) => item.oil_temperature);
+      const times = measurementData.data.map((item: measurementData) =>
+        new Date(item.timestamp).toLocaleTimeString("id-ID", { hour12: false })
+      );
 
-    const temps = measurementData.data.map((item: any) => item.oil_temperature);
-    const times = measurementData.data.map((item: any) =>
-      new Date(item.timestamp).toLocaleTimeString("id-ID", { hour12: false })
-    );
+      setSeries([{ name: "Temperature", data: temps.slice(-MAX_POINTS) }]);
+      setCategories(times.slice(-MAX_POINTS));
+    }
+  }, [measurementData]);
 
-    setSeries([{ name: "Temperature", data: temps.slice(-MAX_POINTS) }]);
-    setCategories(times.slice(-MAX_POINTS));
-    setInitialized(true);
-  }, [measurementData, initialized]);
-
-  // ====== UPDATE CHART WITH REALTIME MQTT ======
+  // useEffect untuk update MQTT (tetap sama)
   useEffect(() => {
     if (realtime?.oil?.temperature === undefined) return;
-
     const now = new Date().toLocaleTimeString("id-ID", { hour12: false });
-
     setSeries((prev) => {
       const newData = [...prev[0].data, realtime.oil.temperature];
       if (newData.length > MAX_POINTS) newData.shift();
       return [{ ...prev[0], data: newData }];
     });
-
     setCategories((prev) => {
       const newCats = [...prev, now];
       if (newCats.length > MAX_POINTS) newCats.shift();
       return newCats;
     });
-
-    setLoading(false);
   }, [realtime]);
 
   // ====== CHART OPTIONS ======
@@ -122,21 +125,20 @@ export default function OilTemperature() {
     },
   };
 
-  // ====== LOADING UI ======
-  if (
-    loading ||
-    isLoadingMeasurements ||
-    isLoadingThreshold ||
-    isErrorMeasurements ||
-    isErrorThreshold
-  ) {
+  // ✅ 4. Sederhanakan kondisi loading
+  // Sekarang hanya bergantung pada query yang berjalan di client untuk refetch
+  if (isLoadingMeasurements || isLoadingThreshold) {
     return (
-      <div className="flex flex-col items-center justify-center h-[200px] col-span-5">
-        <p className="ml-4 text-gray-500 dark:text-gray-400 animate-pulse">
-          Waiting for realtime data...
+      <div className="flex flex-col items-center justify-center h-[200px]">
+        <p className="text-gray-500 dark:text-gray-400 animate-pulse">
+          Loading chart data...
         </p>
       </div>
     );
+  }
+
+  if (isErrorMeasurements || isErrorThreshold) {
+      return <div>Error loading data...</div>
   }
 
   // ====== RENDER UI ======

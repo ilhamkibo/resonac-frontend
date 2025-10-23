@@ -3,6 +3,9 @@ import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import { useState, useEffect } from "react";
 import { Maximize2, Minimize2 } from "lucide-react"; // 👈 tambahkan ini
 import { usePathname } from "next/navigation";
+import { useAuth } from '@/hooks/useAuth'; // ✅ Impor hook
+import SignOutButton from '@/components/auth/SignOutButton'; // ✅ 1. Impor komponen baru
+import { useAuthModal } from "@/context/AuthModalContext";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -10,6 +13,8 @@ export default function Navbar() {
   const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false); // 👈 state fullscreen
+  const { user } = useAuth(); // ✅ Gunakan hook untuk mendapatkan data user
+  const { openModal } = useAuthModal();
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -62,18 +67,22 @@ export default function Navbar() {
             className="h-8"
             alt="Logo"
           />
-          {/* <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
-            Flowbite
-          </span> */}
         </a>
 
         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse items-center">
-          {/* Tombol Fullscreen 👇 */}
-          <a href="/signin"
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+          {user ? (
+          <div className="flex items-center space-x-4">
+            <span className="hidden sm:inline dark:text-white text-gray-900">Welcome, {user.name}!</span>
+            <SignOutButton />
+          </div>
+        ) : (
+          <button
+            onClick={openModal}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
           >
             Sign In
-          </a>
+          </button>
+        )}
 
           <button
             onClick={toggleFullscreen}
@@ -121,11 +130,7 @@ export default function Navbar() {
             <li>
               <a
                 href="/"
-                className={`block py-2 px-3 rounded-sm md:p-0 ${
-            pathname === "/"
-              ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
-              : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"
-          }`}
+                className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
               >
                 Home
               </a>
@@ -133,44 +138,29 @@ export default function Navbar() {
             <li>
               <a
                 href="/input-manual"
-                className={`block py-2 px-3 rounded-sm md:p-0 ${
-            pathname === "/input-manual"
-              ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
-              : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"
-          }`}
+                className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/input-manual" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
               >
                 Input
               </a>
             </li>
             <li>
               <a
-                href="/history"
-                className={`block py-2 px-3 rounded-sm md:p-0 ${
-            pathname === "/history"
-              ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500"
-              : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"
-          }`}
+                href="/error-history"
+                className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/error-history" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
               >
-                Logs
+                Error
               </a>
             </li>
-            
-            {/* <li>
-              <a
-                href="#"
-                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white"
-              >
-                Services
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white"
-              >
-                Contact
-              </a>
-            </li> */}
+            {user &&(
+              <li>
+                <a
+                  href="/history"
+                  className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/history" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
+                >
+                  Logs
+                </a>
+              </li>
+            )}
             <li className="md:hidden ml-3  mt-2">
               <ThemeToggleButton />
             </li>

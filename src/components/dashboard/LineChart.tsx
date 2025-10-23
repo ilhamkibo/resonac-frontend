@@ -55,7 +55,7 @@ export default function LineChart({ title }: { title: string }) {
 
   const threshold = 120;
   const options: ApexOptions = {
-    chart: { type: "line", height: 200, toolbar: { show: false } },
+    chart: { type: "line", height: 200, toolbar: { show: false }, zoom: { enabled: false } },
     stroke: { width: 2, curve: "smooth" },
     colors: ["#ff0000", "#858585", "#000"],
     tooltip: { enabled: true, theme: "light", x: { format: "HH:mm:ss" } },
