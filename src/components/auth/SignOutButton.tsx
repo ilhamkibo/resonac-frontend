@@ -29,7 +29,8 @@ export default function SignOutButton({ className, ...props }: SignOutButtonProp
       loading: 'Signing you out...',
       success: () => {
         // 3. Redirect HANYA SETELAH promise berhasil dan toast success muncul
-        router.push("/signin");
+        // router.push("/signin");
+        window.location.reload();
         router.refresh();
         return "You have been signed out successfully."; // Pesan untuk toast success
       },

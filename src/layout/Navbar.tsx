@@ -78,7 +78,7 @@ export default function Navbar() {
         ) : (
           <button
             onClick={openModal}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+            className="px-4 text-white dark:text-gray-300 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
           >
             Sign In
           </button>

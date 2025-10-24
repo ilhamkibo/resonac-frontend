@@ -18,6 +18,7 @@ export function useMqttSubscription<T>(topic: string): T | null {
     const handleMessage = (payload: Buffer) => {
       try {
         const message = JSON.parse(payload.toString());
+        console.log("🚀 ~ handleMessage ~ message:", message)
         setData(message);
       } catch (e) {
         console.error(`Failed to parse MQTT message from topic: ${topic}`, e);
