@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import mqttService from "@/services/mqtt/mqttService";
+import mqttService from "@/services/mqttService";
 import { useMqtt } from "@/context/MqttContext";
 
 // Tipe generic <T> agar hook ini bisa digunakan untuk berbagai bentuk data
@@ -18,7 +18,6 @@ export function useMqttSubscription<T>(topic: string): T | null {
     const handleMessage = (payload: Buffer) => {
       try {
         const message = JSON.parse(payload.toString());
-        console.log("🚀 ~ handleMessage ~ message:", message)
         setData(message);
       } catch (e) {
         console.error(`Failed to parse MQTT message from topic: ${topic}`, e);

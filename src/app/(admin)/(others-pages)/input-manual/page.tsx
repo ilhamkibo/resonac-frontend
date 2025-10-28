@@ -7,7 +7,8 @@ import SaveButton from "@/components/input-manual/SaveButton";
 import { AmpereCardGroup } from "@/components/input-manual/AmpereCardGroup";
 import { OilPressureCard } from "@/components/input-manual/OilPressureCard";
 import { OilTemperatureCard } from "@/components/input-manual/OilTemperatureCard";
-import { useAuth } from "@/hooks/useAuth";
+import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
+import { RealtimeData } from "@/types/mqtt";
 
 type Row = {
   id: number;
@@ -28,8 +29,7 @@ type Row = {
 export default function Page() {
   const [pilotValue, setPilotValue] = useState<number>(5.5);
   const [tableData, setTableData] = useState<Row[]>([]);
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
-  const { user } = useAuth();
+  const mqttData = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value");
 
 
   const initialTableData: Row[] = []; // contoh: await getHistoryData();
@@ -65,7 +65,7 @@ export default function Page() {
       </div>
 
       <div className="mt-6">
-        <SaveButton initialData={initialTableData} />
+        <SaveButton mqttData={mqttData?.realtime} />
       </div>
 
       <div className="mt-6">

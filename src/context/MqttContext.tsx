@@ -51,7 +51,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useRef } from "react";
-import mqttService, { ConnectionStatus } from "@/services/mqtt/mqttService";
+import mqttService, { ConnectionStatus } from "@/services/mqttService";
 
 type MqttContextType = {
   status: ConnectionStatus;

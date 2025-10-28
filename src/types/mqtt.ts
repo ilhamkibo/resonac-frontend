@@ -1,7 +1,7 @@
 // --- Tipe untuk Data Realtime ---
 
 // Tipe untuk data motor (bisa untuk 'main' dan 'pilot' karena strukturnya sama)
-export type MotorMetrics = {
+export type PumpData = {
   ampere_r: number;
   ampere_s: number;
   ampere_t: number;
@@ -20,8 +20,8 @@ export type OilData = {
 
 // Tipe gabungan untuk semua data realtime
 export type RealtimeData = {
-  main: MotorMetrics;
-  pilot: MotorMetrics;
+  main: PumpData;
+  pilot: PumpData;
   oil: OilData;
 };
 

@@ -2,22 +2,36 @@
 
 import React, { createContext, useContext, useState } from "react";
 
+type ModalView = 'signIn' | 'signUp';
+
 interface AuthModalContextProps {
   isOpen: boolean;
-  openModal: () => void;
+  view: ModalView; // ✅ 2. Tambahkan 'view' ke interface
+  openModal: (view?: ModalView) => void; // ✅ 3. Modifikasi openModal (opsional)
   closeModal: () => void;
+  setView: (view: ModalView) => void; // ✅ 4. Tambahkan 'setView'
 }
 
 const AuthModalContext = createContext<AuthModalContextProps | undefined>(undefined);
 
 export const AuthModalProvider = ({ children }: { children: React.ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [view, setView] = useState<ModalView>('signIn'); // ✅ 5. Tambahkan state 'view'
 
-  const openModal = () => setIsOpen(true);
+  const openModal = (viewToShow: ModalView = 'signIn') => { // ✅ 6. Terapkan openModal
+    setView(viewToShow);
+    setIsOpen(true);
+  };
   const closeModal = () => setIsOpen(false);
 
   return (
-    <AuthModalContext.Provider value={{ isOpen, openModal, closeModal }}>
+    <AuthModalContext.Provider value={{ 
+      isOpen, 
+        view,     // ✅ 7. Berikan 'view'
+        openModal, 
+        closeModal, 
+        setView   // ✅ 8. Berikan 'setView'
+     }}>
       {children}
     </AuthModalContext.Provider>
   );

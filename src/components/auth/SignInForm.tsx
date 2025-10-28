@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from 'js-cookie'; // ✅ 1. Impor js-cookie
 
+import { useAuthModal } from "@/context/AuthModalContext";
+
 // ✅ 1. Pastikan path dan nama impor sesuai dengan file validasi Anda
 import { LoginPayload, authSchema } from "@/validations/authSchema"; 
 import { authService } from "@/services/authService";
@@ -16,13 +18,13 @@ import { authService } from "@/services/authService";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
-import Checkbox from "@/components/form/input/Checkbox";
+import { EyeCloseIcon, EyeIcon } from "@/icons";
 
 // ❌ Fungsi loginAction ini tidak diperlukan dan dihapus
 // karena kita sudah menggunakan authService dan TanStack Query.
 
 export default function SignInForm() {
+  const { setView } = useAuthModal();  
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   
@@ -173,6 +175,19 @@ export default function SignInForm() {
                 </div>
               </div>
             </form>
+            <div className="mt-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Don&apos;t have an account yet?{" "}
+                {/* ✅ 3. Ganti <Link> menjadi <button> */}
+                <button
+                  type="button"
+                  onClick={() => setView('signUp')} // Panggil setView
+                  className="text-brand-500 underline hover:text-brand-600 dark:text-brand-400"
+                >
+                  Sign Up
+                </button>
+              </span>
+            </div>
             {/* ... bagian footer (contact admin) ... */}
           </div>
         </div>

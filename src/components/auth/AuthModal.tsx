@@ -2,10 +2,14 @@
 
 import { useAuthModal } from "@/context/AuthModalContext";
 import SignInForm from "@/components/auth/SignInForm";
+// ✅ 1. Impor komponen SignUpForm baru Anda
+import SignUpForm from "@/components/auth/SignUpForm"; 
 
 export default function AuthModal() {
-  const { isOpen, closeModal } = useAuthModal();
+  // ✅ 2. Ambil 'view' dari hook
+  const { isOpen, closeModal, view } = useAuthModal();
 
+  
   if (!isOpen) return null;
 
   return (
@@ -17,7 +21,11 @@ export default function AuthModal() {
         >
           ✕
         </button>
-        <SignInForm />
+        
+        {/* ✅ 3. Render form secara kondisional berdasarkan 'view' */}
+        {view === 'signIn' && <SignInForm />}
+        {view === 'signUp' && <SignUpForm />} 
+        
       </div>
     </div>
   );
