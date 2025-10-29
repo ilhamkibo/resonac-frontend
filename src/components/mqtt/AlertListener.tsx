@@ -3,7 +3,7 @@
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertItem, AlertPayload } from "@/types/mqtt";
+import { AlertItem, AlertPayload } from "@/types/mqttType";
 import { v4 as uuidv4 } from "uuid";
 
 

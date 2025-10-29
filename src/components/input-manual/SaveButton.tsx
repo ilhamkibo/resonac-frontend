@@ -2,7 +2,7 @@
 
 import { useAuthModal } from "@/context/AuthModalContext";
 import { useAuth } from "@/hooks/useAuth";
-import { RealtimeData } from "@/types/mqtt"; // Pastikan path ini benar
+import { RealtimeData } from "@/types/mqttType"; // Pastikan path ini benar
 import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
@@ -26,8 +26,18 @@ export default function SaveButton({ mqttData }: { mqttData: RealtimeData | unde
    setCapturedData(null); 
   },
   onError: (error: any) => {
-   const message = error.response?.data?.message || "Gagal menyimpan data.";
-   toast.error(message);
+
+   if (error.response?.status === 401) {
+        
+      toast.error('Sesi Anda telah berakhir. Silakan login ulang.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      // Tangani error lainnya
+      const message = error.response?.data?.message || "Gagal menyimpan data.";
+      toast.error(message);
+    }
   },
  });
 

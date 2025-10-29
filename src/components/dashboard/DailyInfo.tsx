@@ -127,7 +127,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
-import { NotificationData } from "@/types/mqtt";
+import { NotificationData } from "@/types/mqttType";
 import { useMqtt } from "@/context/MqttContext";
 
 export default function DailyInfo() {

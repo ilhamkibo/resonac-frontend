@@ -1,5 +1,5 @@
 import { axiosInstance } from "@/lib/api/axios";
-import { RealtimeData } from "@/types/mqtt"; // Asumsi tipe data Anda
+import { RealtimeData } from "@/types/mqttType"; // Asumsi tipe data Anda
 
 // Fungsi untuk mengirim data manual
 interface ApiManualInputPayload {
@@ -39,4 +39,24 @@ export const manualInputService = {
         const response = await axiosInstance.post('/manual-inputs', payload); 
         return response; 
     },
+
+    async getManualInputs(page: number, limit: number) {
+        try {
+        // Kirim 'page' dan 'limit' sebagai query params ke backend
+        const response = await axiosInstance.get('/manual-inputs', {
+            params: {
+            page,
+            limit
+            }
+        });
+        
+        // Kembalikan data dan totalCount
+        return response.data; 
+
+        } catch (error) {
+            // Kembalikan data kosong jika error
+            return { data: [], totalCount: 0, page: 1, limit: 10 };
+        }
+    }
+
 };

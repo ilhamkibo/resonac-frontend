@@ -4,7 +4,7 @@ import LineChart from "./LineChart";
 import AreaChart from "./AreaChart";
 import ValueCard from "../utils/ValueCard";
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
-import { RealtimeData } from "@/types/mqtt";
+import { RealtimeData } from "@/types/mqttType";
 import { useQuery } from "@tanstack/react-query";
 import { measurementService } from "@/services/measurementService";
 import { thresholdService } from "@/services/thresholdService";

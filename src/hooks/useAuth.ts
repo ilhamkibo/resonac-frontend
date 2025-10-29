@@ -1,7 +1,7 @@
 // hooks/useAuth.ts
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import { decodeJwt } from 'jose'; // ✅ 1. Impor 'decodeJwt' dari 'jose'
 import { UserPayload } from '@/types/userType';
@@ -34,5 +34,10 @@ export function useAuth() {
     }
   }, []);
 
-  return { user };
+  const logout = useCallback(() => {
+    Cookies.remove('accessToken'); // Hapus cookie
+    setUser(null); // Set state user menjadi null
+  }, []);
+
+  return { user, logout };
 }

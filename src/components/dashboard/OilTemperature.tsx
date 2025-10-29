@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { ApexOptions } from "apexcharts";
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
-import { RealtimeData } from "@/types/mqtt";
+import { RealtimeData } from "@/types/mqttType";
 import { useQuery } from "@tanstack/react-query";
 import { measurementService } from "@/services/measurementService";
 import { thresholdService } from "@/services/thresholdService";
