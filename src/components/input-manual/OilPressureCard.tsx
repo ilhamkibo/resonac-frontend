@@ -2,45 +2,35 @@
 
 import dynamic from "next/dynamic";
 import { Gauge } from "lucide-react";
-import { useState, useEffect } from "react";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 type Props = {
-  value?: number;
-  onChange?: (v: number) => void;
-  max?: number;
+  data: {
+    main: number | undefined;
+    pilot: number | undefined;
+  };
+  title: string
+  thresholds: { area: string; max: number; min: number }[];
 };
 
-export function OilPressureCard({ value, onChange, max = 10 }: Props) {
-  const [mainValue, setMainValue] = useState(5.3);
-  const [pilotValue, setPilotValue] = useState(4.7);
-  const maxPressure = max;
+export function OilPressureCard({ data, title, thresholds }: Props) {
 
-  // Auto update dummy data tiap 2 detik
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMainValue((prev) => {
-        const newVal = prev + (Math.random() * 0.6 - 0.3); // ±0.3
-        return Math.min(Math.max(newVal, 0), maxPressure);
-      });
-      setPilotValue((prev) => {
-        const newVal = prev + (Math.random() * 0.6 - 0.3);
-        return Math.min(Math.max(newVal, 0), maxPressure);
-      });
-    }, 2000);
+  const mainValue = data.main ?? 0;
+  const pilotValue = data.pilot ?? 0;
 
-    return () => clearInterval(interval);
-  }, [maxPressure]);
+  const maxPressureMainPump = thresholds.find((t) => t.area === "main")?.max || 0;
+  const maxPressurePilotPump = thresholds.find((t) => t.area === "pilot")?.max || 0;
 
-  const getColor = (v: number) => {
+  const getColor = (v: number, maxPressure: number) => {
+    if (maxPressure === 0) return "#3b82f6"; // Hindari pembagian nol
     const p = (v / maxPressure) * 100;
     if (p >= 90) return "#dc2626";
     if (p >= 70) return "#f59e0b";
     return "#3b82f6";
   };
 
-  const makeGaugeOptions = (color: string): ApexCharts.ApexOptions => ({
+  const makeGaugeOptions = (color: string, maxPressure: number): ApexCharts.ApexOptions => ({
     chart: { type: "radialBar", sparkline: { enabled: true } },
     plotOptions: {
       radialBar: {
@@ -62,7 +52,7 @@ export function OilPressureCard({ value, onChange, max = 10 }: Props) {
             color,
             offsetY: -10,
             formatter: (val: number) =>
-              `${((val / 100) * maxPressure).toFixed(1)} bar`,
+              `${((val / 100) * maxPressure).toFixed(1)} bar`,          
           },
         },
       },
@@ -84,7 +74,7 @@ export function OilPressureCard({ value, onChange, max = 10 }: Props) {
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-md p-6 w-full h-[340px] flex flex-col">
       <div className="flex items-center justify-center mb-4">
         <h3 className="text-gray-700 dark:text-gray-300 text-lg font-semibold uppercase tracking-wide">
-          Oil Pressure
+          {title}
         </h3>
       </div>
 
@@ -98,8 +88,8 @@ export function OilPressureCard({ value, onChange, max = 10 }: Props) {
             </h1>
           </div>
           <ReactApexChart
-            options={makeGaugeOptions(getColor(mainValue))}
-            series={[(mainValue / maxPressure) * 100]}
+            options={makeGaugeOptions(getColor(mainValue, maxPressureMainPump), maxPressureMainPump)}
+            series={maxPressureMainPump === 0 ? [0] : [(mainValue / maxPressureMainPump) * 100]}
             type="radialBar"
             height={200}
           />
@@ -114,8 +104,8 @@ export function OilPressureCard({ value, onChange, max = 10 }: Props) {
             </h1>
           </div>
           <ReactApexChart
-            options={makeGaugeOptions(getColor(pilotValue))}
-            series={[(pilotValue / maxPressure) * 100]}
+            options={makeGaugeOptions(getColor(pilotValue, maxPressurePilotPump), maxPressurePilotPump)}
+            series={maxPressurePilotPump === 0 ? [0] : [(pilotValue / maxPressurePilotPump) * 100]}
             type="radialBar"
             height={200}
           />

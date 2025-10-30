@@ -9,47 +9,60 @@ import { useMutation } from "@tanstack/react-query";
 import { manualInputService } from "@/services/manualInputService"; // Pastikan path ini benar
 
 
-export default function SaveButton({ mqttData }: { mqttData: RealtimeData | undefined }) {  
+export default function SaveButton({ 
+  mqttData, 
+  onSaveSuccess 
+}: { 
+  mqttData: RealtimeData | undefined, 
+  onSaveSuccess: (savedData: RealtimeData, savedTime: string) => void 
+}) {
+
   const [lastSaved, setLastSaved] = useState<string | null>(null);
- const { user } = useAuth(); // Anda sudah memiliki 'user'
- const { openModal } = useAuthModal();
- const [capturedData, setCapturedData] = useState<RealtimeData | null>(null);
+  const { user } = useAuth(); // Anda sudah memiliki 'user'
+  const { openModal } = useAuthModal();
+  const [capturedData, setCapturedData] = useState<RealtimeData | null>(null);
 
- const mutation = useMutation({
-    // ✅ 7. Ubah mutationFn untuk mengirim objek berisi data & userId
-  mutationFn: (vars: { data: RealtimeData; userId: number }) => 
-      manualInputService.submitInput(vars.data, vars.userId), 
-  onSuccess: () => {
-   const now = new Date().toLocaleString("id-ID");
-   setLastSaved(now);
-   toast.success("Data berhasil disimpan!");
-   setCapturedData(null); 
-  },
-  onError: (error: any) => {
+  const mutation = useMutation({
+      // ✅ 7. Ubah mutationFn untuk mengirim objek berisi data & userId
+    mutationFn: (vars: { data: RealtimeData; userId: number }) => 
+        manualInputService.submitInput(vars.data, vars.userId), 
+    onSuccess: () => {
+      const now = new Date().toLocaleString("id-ID");
+      const isoNow = new Date().toISOString();
+      setLastSaved(now);
+      toast.success("Data berhasil disimpan!");
+      
+      if (capturedData) {
+        onSaveSuccess(capturedData, isoNow);
+      }
+      
+      setCapturedData(null);
+    },
+    onError: (error: any) => {
 
-   if (error.response?.status === 401) {
-        
-      toast.error('Sesi Anda telah berakhir. Silakan login ulang.');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+    if (error.response?.status === 401) {
+          
+        toast.error('Sesi Anda telah berakhir. Silakan login ulang.');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        // Tangani error lainnya
+        const message = error.response?.data?.message || "Gagal menyimpan data.";
+        toast.error(message);
+      }
+    },
+  });
+
+  const handleCaptureData = () => {
+      // ... (Fungsi ini tidak perlu diubah)
+    if (mqttData) {
+    setCapturedData(mqttData);
+    toast.info("Data terbaru telah diambil. Silakan periksa dan simpan.");
     } else {
-      // Tangani error lainnya
-      const message = error.response?.data?.message || "Gagal menyimpan data.";
-      toast.error(message);
+    toast.error("Data MQTT tidak tersedia. Coba lagi sesaat.");
     }
-  },
- });
-
- const handleCaptureData = () => {
-    // ... (Fungsi ini tidak perlu diubah)
-  if (mqttData) {
-   setCapturedData(mqttData);
-   toast.info("Data terbaru telah diambil. Silakan periksa dan simpan.");
-  } else {
-   toast.error("Data MQTT tidak tersedia. Coba lagi sesaat.");
-  }
- };
+  };
 
  const handleSaveData = () => {
   if (!capturedData) {

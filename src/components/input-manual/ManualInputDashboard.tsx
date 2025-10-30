@@ -10,23 +10,21 @@ import { OilTemperatureCard } from "@/components/input-manual/OilTemperatureCard
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { RealtimeData } from "@/types/mqttType";
 import { useAuth } from "@/hooks/useAuth";
+import { thresholdData } from "@/types/thresholdType";
 
 // Tentukan tipe props yang diterima dari Server Component
-type Row = { /* ... Tipe Row Anda ... */ };
-type Thresholds = { /* ... Tipe Thresholds Anda ... */ };
+type Row = { /* ... Tipe Row Anda ... */ }
 
 interface DashboardProps {
-  initialTableData: Row[];
-  thresholdData: Thresholds;
+  thresholds: thresholdData[];
 }
 
 export default function ManualInputDashboard({ 
-  initialTableData, 
-  thresholdData 
+  thresholds
 }: DashboardProps) {
 
   // 1. 'tableData' diinisialisasi dengan data dari server
-  const [tableData, setTableData] = useState<Row[]>(initialTableData);
+  const [tableData, setTableData] = useState<Row[]>([]);
   
   // 2. Logika client-side (MQTT, Auth) tetap di sini
   const mqttData = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value");
@@ -51,7 +49,11 @@ export default function ManualInputDashboard({
     setTableData(prevData => [newRow, ...prevData]);
   };
 
-  // 4. Render layout (sama seperti page.tsx Anda sebelumnya)
+  const minMaxAmpereMainPump = thresholds.filter(t => t.area === "main").filter(t => t.parameter === "ampere").map(t => ({ min: t.lowerLimit, max: t.upperLimit }));
+  const minMaxAmperePilotPump = thresholds.filter(t => t.area === "pilot").filter(t => t.parameter === "ampere").map(t => ({ min: t.lowerLimit, max: t.upperLimit }));
+  const minMaxOilTemp = thresholds.filter(t => t.area === "oil").filter(t => t.parameter === "temp").map(t => ({ min: t.lowerLimit, max: t.upperLimit }));
+  const minMaxOilPressure = thresholds.filter(t => t.parameter === "pressure").map(t => ({ area: t.area, min: t.lowerLimit, max: t.upperLimit }));
+
   return (
     <div className="p-6">
       
@@ -64,7 +66,7 @@ export default function ManualInputDashboard({
             { label: "T", value: mqttData?.realtime?.main?.ampere_t },
           ]}
           // 5. Teruskan threshold ke kartu
-          thresholds={thresholdData.mainPump} 
+          thresholds={minMaxAmpereMainPump[0]} 
         />
         <AmpereCardGroup
           title="Pilot Pump"
@@ -73,19 +75,22 @@ export default function ManualInputDashboard({
              { label: "S", value: mqttData?.realtime?.pilot?.ampere_s },
              { label: "T", value: mqttData?.realtime?.pilot?.ampere_t },
           ]}
-          thresholds={thresholdData.pilotPump}
+          thresholds={minMaxAmperePilotPump[0]}
         />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 mt-6">
         <OilPressureCard 
-          value={mqttData?.realtime?.main?.oil_pressure} 
-          title="Main Oil Pressure"
-          thresholds={thresholdData.oil} // (Sesuaikan)
+          data={{ 
+            main: mqttData?.realtime?.main?.oil_pressure,
+            pilot: mqttData?.realtime?.pilot?.oil_pressure 
+          }}          title="Main Oil Pressure"
+          thresholds={minMaxOilPressure} // (Sesuaikan)
         />
         <OilTemperatureCard 
-          value={mqttData?.realtime?.oil?.temperature} 
-          thresholds={thresholdData.oil} // (Sesuaikan)
+          title="Oil Temperature"
+          data={{ value: mqttData?.realtime?.oil?.temperature }}
+          thresholds={minMaxOilTemp[0]}
         />
       </div>
 
