@@ -37,19 +37,20 @@ export interface ManualInputRecord {
 /**
  * Tipe untuk objek 'meta' pagination dari API.
  */
-export interface PaginationMeta {
+export interface Pagination {
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
+
 /**
  * Tipe untuk objek 'data' utama yang berisi array data dan meta.
  */
 export interface PaginatedData {
   data: ManualInputRecord[];
-  meta: PaginationMeta;
+  meta: Pagination;
 }
 
 /**

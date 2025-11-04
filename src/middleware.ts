@@ -5,7 +5,7 @@ import { jwtVerify } from 'jose';
 
 // Daftar rute
 const publicRoutes = ['/signin', '/signup'];
-const protectedRoutes = [ '/history'];
+const protectedRoutes = [ '/historyyy'];
 
 const getJwtSecretKey = () => {
   const secret = process.env.JWT_ACCESS_SECRET;

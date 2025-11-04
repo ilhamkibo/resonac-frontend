@@ -1,25 +1,17 @@
-// app/dashboard/page.tsx
-
 import type { Metadata } from "next";
 import React from "react";
-
-// ✅ 1. Impor service yang dibutuhkan di level server
 import { measurementService } from "@/services/measurementService";
 import { thresholdService } from "@/services/thresholdService";
-
-// Impor komponen-komponen anak
 import OilTemperature from "@/components/dashboard/OilTemperature";
 import PumpArea from "@/components/dashboard/PumpArea";
 
-// Metadata tetap di sini
 export const metadata: Metadata = {
   title: "Utility Dashboard | Resonac Utility Monitoring",
   description: "Resonac Realtime Utility Monitoring Dashboard",
 };
 
-// ✅ 2. Ubah menjadi async function untuk fetching data
 export default async function Page() {
-  // ✅ 3. Ambil semua data awal secara paralel untuk efisiensi
+
   const getDashboardData = async (area: string) => {
     const [measurements, thresholds] = await Promise.all([
       measurementService.getMeasurementsDashboardData(area),
