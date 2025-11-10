@@ -1,98 +1,153 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';// Impor tipe-tipe yang dibutuhkan
+import { useQuery, keepPreviousData, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '@/services/userService';
-import { UserQuery,  } from '@/validations/userSchema';
-import { UserResponse, UserStats } from '@/types/userType';
+import { UserQuery, UserResponse, UserStats } from '@/types/userType';
 import { toast } from 'sonner';
+import { useModal } from '@/hooks/useModal';
+import { Modal } from '../ui/modal';
+import Button from '../ui/button/Button';
+import Pagination from '../tables/Pagination';
+import ValueCard from '../utils/ValueCard';
+import { User2Icon, CheckCircleIcon, XCircleIcon, GaugeIcon, GaugeCircle, GaugeCircleIcon, LucideGauge } from "lucide-react";
+import UserStatsCards from './UserStatsCards';
 
 export default function UsersCard() {
-  // 1. State untuk menyimpan semua query params
   const [query, setQuery] = useState<UserQuery>({
     page: '1',
-    limit: '5', // Atur limit default (misal: 5 agar mudah dites)
-    status: 'approved', // Status default
-    role: undefined, // Role default (semua)
+    limit: '5',
+    status: 'approved',
+    role: undefined,
+  });
+  const [userToDelete, setUserToDelete] = useState<string | number | null>(null);
+  const [userNameToDelete, setUserNameToDelete] = useState<string | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | number | null>(null); // 🆕 user yang sedang di-edit
+  const [editForm, setEditForm] = useState({
+    email: '',
+    name: '',
+    isApproved: false,
+    role: 'operator',
   });
 
-  // 2. useQuery sekarang bergantung pada state 'query'
-  const { 
-    data: queryResult, // data adalah { data: User[], pagination: ... }
-    isLoading, 
-    isError, 
-    error 
-  } = useQuery<UserResponse, Error>({
-    queryKey: ['users', query], 
+  const queryClient = useQueryClient();
+
+  const { data: queryResult, isLoading, isError, error } = useQuery<UserResponse, Error>({
+    queryKey: ['users', query],
     queryFn: () => userService.getAllUser(query),
     placeholderData: keepPreviousData,
-    staleTime: 1000 * 60, // Cache selama 1 menit
+    staleTime: 1000 * 60,
   });
-    console.log("🚀 ~ UsersCard ~ queryResult:", queryResult)
 
   const {
-    data: userStats, // data adalah { data: User[], pagination: ... }
-    isLoading: userStatsLoading, 
-    isError: userStatsIsError, 
-    error: userStatsError
+    data: userStats,
+    isLoading: userStatsLoading,
   } = useQuery<UserStats, Error>({
-    queryKey: ['userStats'], 
+    queryKey: ['userStats'],
     queryFn: () => userService.getUserStats(),
-    staleTime: 1000 * 60, // Cache selama 1 menit
+    staleTime: 1000 * 60,
   });
-    console.log("🚀 ~ UsersCard ~ userStats:", userStats)
 
-  // Ekstrak data untuk rendering yang lebih mudah
   const users = queryResult?.data;
   const pagination = queryResult?.pagination;
-  
+  const { isOpen, openModal, closeModal } = useModal();
 
-  // 3. Handler untuk mengubah filter
+  const deleteMutation = useMutation({
+    mutationFn: (id: string | number) => userService.deleteUser(id),
+    onSuccess: () => {
+      toast.success("User deleted successfully.");
+      closeModal();
+      setUserToDelete(null);
+      setUserNameToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+    },
+    onError: (error) => {
+      toast.error((error as Error).message || "Failed to delete user.");
+      closeModal();
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (id: string | number) => userService.updateUser(id, { isApproved: true }),
+    onSuccess: () => {
+      toast.success("User approved successfully.");
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+    },
+    onError: (error) => {
+      toast.error((error as Error).message || "Failed to approve user.");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string | number; data: any }) => userService.updateUser(id, data),
+    onSuccess: () => {
+      toast.success("User updated successfully.");
+      setEditingUserId(null);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['userStats'] });
+    },
+    onError: (error) => {
+      toast.error((error as Error).message || "Failed to update user.");
+    },
+  });
+
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setQuery(prev => ({
       ...prev,
-      [name]: value || undefined, // Set 'undefined' jika value kosong (misal: "All Roles")
-      page: '1', // Best Practice: Selalu reset ke halaman 1 saat filter berubah
+      [name]: value || undefined,
+      page: '1',
     }));
   };
 
-  // 4. Handler untuk Pagination
-  const handleNextPage = () => {
-    if (pagination && pagination.page < pagination.totalPages) {
-      setQuery(prev => ({ ...prev, page: String(Number(prev.page) + 1) }));
-    }
+  const handleDeleteUser = (id: number | string, name: string) => {
+    setUserToDelete(id);
+    setUserNameToDelete(name);
+    openModal();
   };
 
-  const handlePrevPage = () => {
-    if (pagination && pagination.page > 1) {
-      setQuery(prev => ({ ...prev, page: String(Number(prev.page) - 1) }));
-    }
+  const handleApproveUser = (id: number | string) => {
+    approveMutation.mutate(id);
   };
 
-  const handleDeleteUser = async (id: number | string) => {
-    toast.success("User deleted successfully.");
+  // 🆕 Saat klik Edit
+  const handleEditUser = (user: any) => {
+    setEditingUserId(user.id);
+    setEditForm({
+      email: user.email,
+      name: user.name,
+      isApproved: user.isApproved,
+      role: user.role,
+    });
   };
 
-  const handleApproveUser = async (id: number | string) => {
-    toast.success("User approved successfully.");
+  // 🆕 Saat klik Cancel Edit
+  const handleCancelEdit = () => {
+    setEditingUserId(null);
   };
 
-  const handleEditUser = async (id: number | string) => {
-    toast.success("User edited successfully.");
+  // 🆕 Saat submit perubahan
+  const handleSaveEdit = (id: string | number) => {
+    updateMutation.mutate({ id, data: editForm });
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) deleteMutation.mutate(userToDelete);
   };
 
   return (
-    <div>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 mb-5">
+    <div className='grid grid-cols-4 gap-4'>   
+      <div className="col-span-3 bg-white dark:bg-gray-800 rounded-2xl p-5 ">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white">User List</h3>
           <h1 className="font-semibold text-gray-800 dark:text-gray-400">
-            Total: {userStats?.userCount} | Approved: {userStats?.approvedUserCount} | Unapproved: {userStats?.unapprovedUserCount}
+            Only admin role can approve, edit and delete user
           </h1>
         </div>
 
-        {/* --- Filter Controls --- */}
+        {/* Filters */}
         <div className="flex gap-4 mb-4">
           <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -103,7 +158,7 @@ export default function UsersCard() {
               name="status"
               value={query.status || 'approved'}
               onChange={handleFilterChange}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 bg-gray-200 dark:border-gray-600 dark:text-white"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="approved">Approved</option>
               <option value="unapproved">Unapproved</option>
@@ -116,9 +171,9 @@ export default function UsersCard() {
             <select
               id="role"
               name="role"
-              value={query.role || ''} // Gunakan string kosong untuk "All"
+              value={query.role || ''}
               onChange={handleFilterChange}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 bg-gray-200 dark:border-gray-600 dark:text-white"
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             >
               <option value="">All Roles</option>
               <option value="admin">Admin</option>
@@ -127,110 +182,205 @@ export default function UsersCard() {
           </div>
         </div>
 
-        {/* --- Loading State --- */}
+        {/* Table */}
         {isLoading && (
-          <div className="text-center p-5 text-gray-500 dark:text-gray-400">Loading users...</div>
+          <div className="text-center p-5 text-gray-500 dark:text-gray-400 animate-pulse">Loading users...</div>
         )}
 
-        {/* --- Error State --- */}
         {isError && (
           <div className="text-center p-5 text-red-500">
             Error fetching users: {error.message}
           </div>
         )}
 
-        {/* --- Data Display --- */}
         {users && (
           <>
-            <table className="w-full">
+            <table className="w-full border border-gray-200 rounded-md overflow-hidden">
               <thead>
                 <tr className="dark:bg-gray-700 bg-gray-200">
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                  <th className="p-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((user, index) => (
-                  <tr key={user.id} className={index % 2 === 0 ? "bg-white dark:bg-gray-800" : "dark:bg-gray-700 bg-gray-200"}>
-                    <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
-                      {user.email}
-                    </td>
-                    <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
-                      {user.name}
-                    </td>
-                    <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
-                      {user.isApproved ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                          Approved
-                        </span>
+                {users.length > 0 ? (
+                  users.map((user, index) => (
+                    <tr key={user.id} className={index % 2 === 0 ? "bg-white dark:bg-gray-800" : "dark:bg-gray-700 bg-gray-100"}>
+                      {editingUserId === user.id ? (
+                        <>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
+                            <input
+                              type="email"
+                              value={editForm.email}
+                              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                               onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveEdit(user.id);
+                                if (e.key === "Escape") handleCancelEdit();
+                              }}
+                              className={`w-full px-2 py-1 text-left rounded-md outline-none transition ${
+                                updateMutation.isPending
+                                    ? "bg-gray-200 dark:bg-gray-600 text-gray-400"
+                                    : "bg-gray-100 dark:bg-gray-600"
+                                }`
+                              }  
+                              />
+                          </td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
+                            <input
+                              type="text"
+                              value={editForm.name}
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveEdit(user.id);
+                                if (e.key === "Escape") handleCancelEdit();
+                              }}
+                              className={`w-full px-2 py-1 text-left rounded-md outline-none transition ${
+                                updateMutation.isPending
+                                    ? "bg-gray-200 dark:bg-gray-600 text-gray-400"
+                                    : "bg-gray-100 dark:bg-gray-600"
+                                }`
+                              }
+                            />
+                          </td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
+                            <select
+                              value={editForm.isApproved ? "approved" : "unapproved"}
+                              onChange={(e) => setEditForm({ ...editForm, isApproved: e.target.value === "approved" })}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveEdit(user.id);
+                                if (e.key === "Escape") handleCancelEdit();
+                              }}
+                              className="w-full px-2 py-1 border dark:border-gray-600 border-gray-200 rounded-md bg-gray-100 dark:bg-gray-800 dark:text-white"
+                            >
+                              <option value="approved">Approved</option>
+                              <option value="unapproved">Unapproved</option>
+                            </select>
+                          </td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
+                            <select
+                              value={editForm.role}
+                              onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveEdit(user.id);
+                                if (e.key === "Escape") handleCancelEdit();
+                              }}
+                              className="w-full px-2 py-1 border dark:border-gray-600 border-gray-200 rounded-md bg-gray-100 dark:bg-gray-800 dark:text-white"
+                            >
+                              <option value="operator">Operator</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </td>
+                          <td className="p-3 flex gap-2 justify-center">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveEdit(user.id)}
+                              disabled={updateMutation.isPending}
+                              className="bg-green-500 hover:bg-green-600 disabled:bg-green-300"
+                            >
+                              {updateMutation.isPending ? 'Saving...' : 'Update'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={handleCancelEdit}
+                              disabled={updateMutation.isPending}
+                              className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded disabled:opacity-70"
+                            >
+                              Cancel
+                            </Button>
+                          </td>
+                        </>
                       ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                          Unapproved
-                        </span>
+                        <>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">{user.email}</td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">{user.name}</td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
+                            {user.isApproved ? (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+                            ) : (
+                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Unapproved</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{user.role}</td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white flex gap-2 justify-center">
+                            {user.isApproved ? (
+                              <Button size="sm" onClick={() => handleEditUser(user)}>Edit</Button>
+                            ) : (
+                              <Button size="sm" onClick={() => handleApproveUser(user.id)}>Approve</Button>
+                            )}
+                            <Button
+                              size="sm"
+                              onClick={() => handleDeleteUser(user.id, user.name)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete
+                            </Button>
+                          </td>
+                        </>
                       )}
-                    </td>
-                    <td className="p-3 text-sm font-medium text-gray-900 dark:text-white capitalize">
-                      {user.role}
-                    </td>
-                    <td className="p-3 text-sm font-medium text-gray-900 dark:text-white flex gap-2">
-                      {user.isApproved ? (
-                        <button
-                          onClick={() => handleEditUser(user)}
-                          className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
-                        >
-                          Edit
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleApproveUser(user)}
-                          className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600"
-                        >
-                          Approve
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="p-3 text-center text-sm font-medium text-gray-500 dark:text-gray-300">
+                      No users found
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
 
-            <div className="flex items-center justify-between mt-5">
-              <span className="text-sm text-gray-700 dark:text-gray-400">
-                Page <span className="font-semibold">{pagination?.page}</span> of <span className="font-semibold">{pagination?.totalPages}</span>
-                <span className="hidden sm:inline"> (Total: {pagination?.total} users)</span>
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={handlePrevPage}
-                  // Disable tombol jika di halaman pertama
-                  disabled={!pagination || pagination.page === 1}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={handleNextPage}
-                  // Disable tombol jika di halaman terakhir
-                  disabled={!pagination || pagination.page === pagination.totalPages}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
+            {users.length > 0 && pagination && (
+              <div className="flex items-center justify-between mt-5">
+                <span className="text-sm text-gray-700 dark:text-gray-400">
+                  Page <span className="font-semibold">{pagination.page}</span> of <span className="font-semibold">{pagination.totalPages}</span>
+                  <span className="hidden sm:inline"> (Total: {pagination.total} users)</span>
+                </span>
+
+                <Pagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.totalPages}
+                  onPageChange={(page) => setQuery((prev) => ({ ...prev, page: String(page) }))}
+                />
               </div>
-            </div>
+            )}
           </>
         )}
 
+        {/* Modal Delete */}
+        <Modal
+          isOpen={isOpen}
+          onClose={deleteMutation.isPending ? () => {} : closeModal}
+          className="max-w-[500px] p-5 lg:p-8"
+        >
+          <h4 className="font-semibold text-gray-800 mb-4 text-title-sm dark:text-white/90">
+            Confirm Deletion
+          </h4>
+          <p className="text-sm leading-6 text-gray-500 dark:text-gray-400">
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-gray-800 dark:text-white">
+              {userNameToDelete || "this user"}
+            </span>
+            ? This action cannot be undone.
+          </p>
+          <div className="flex items-center justify-end w-full gap-3 mt-8">
+            <Button size="sm" variant="outline" onClick={closeModal} disabled={deleteMutation.isPending}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={confirmDelete}
+              className="bg-red-500 hover:bg-red-600 text-white disabled:bg-red-300"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        </Modal>
       </div>
+      <UserStatsCards userStats={userStats} isLoading={userStatsLoading} />
     </div>
-  )
+  );
 }

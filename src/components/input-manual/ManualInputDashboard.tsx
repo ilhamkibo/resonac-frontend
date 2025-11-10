@@ -10,13 +10,13 @@ import { OilTemperatureCard } from "@/components/input-manual/OilTemperatureCard
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { RealtimeData } from "@/types/mqttType";
 import { useAuth } from "@/hooks/useAuth";
-import { thresholdData } from "@/types/thresholdType";
+import { ThresholdResponse } from "@/types/thresholdType";
 
 // Tentukan tipe props yang diterima dari Server Component
 type Row = { /* ... Tipe Row Anda ... */ }
 
 interface DashboardProps {
-  thresholds: thresholdData[];
+  thresholds: ThresholdResponse;
 }
 
 export default function ManualInputDashboard({ 

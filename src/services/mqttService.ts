@@ -168,6 +168,24 @@ class MqttService {
         this.client.end(true);
     }
   }
+
+  public publish(topic: string, message: string | object, options?: mqtt.IClientPublishOptions) {
+    if (!this.client || this.status !== "Connected") {
+      console.warn("⚠️ MQTT not connected. Cannot publish message.");
+      return;
+    }
+
+    const payload = typeof message === "object" ? JSON.stringify(message) : message;
+
+    this.client.publish(topic, payload, options || { qos: 0, retain: false }, (err) => {
+      if (err) {
+        console.error("❌ Failed to publish message:", err);
+      } else {
+        console.log(`📤 Message published to ${topic}:`, payload);
+      }
+    });
+  }
+
 }
 
 const globalForMqtt = globalThis as unknown as {

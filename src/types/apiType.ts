@@ -1,5 +1,7 @@
 // types/apiTypes.ts
 
+import z from "zod";
+
 /**
  * Mewakili 1 objek di dalam array 'details' dari API.
  * (Data nested untuk 'main', 'pilot', atau 'oil')
@@ -37,13 +39,12 @@ export interface ManualInputRecord {
 /**
  * Tipe untuk objek 'meta' pagination dari API.
  */
-export interface Pagination {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
+export const PaginationSchema = z.object({
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  totalPages: z.number(),
+});
 
 /**
  * Tipe untuk objek 'data' utama yang berisi array data dan meta.
@@ -56,8 +57,11 @@ export interface PaginatedData {
 /**
  * Tipe lengkap untuk respons API riwayat input manual.
  */
-export interface PaginatedHistoryResponse {
+// Definisikan wrapper generik SATU KALI
+export type ApiResponseWrapper<T> = {
   status: string;
   message: string;
-  data: PaginatedData;
-}
+  data: T;
+};
+
+export type Pagination = z.infer<typeof PaginationSchema>;

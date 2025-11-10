@@ -7,7 +7,7 @@ export default async function Page() {
 
   return (
     <ManualInputDashboard 
-      thresholds={thresholdData.data} 
+      thresholds={thresholdData} 
     />
   );
 }

@@ -1,6 +1,5 @@
 import { axiosInstance } from "@/lib/api/axios";
-import { ApiUserResponseWrapper, UserResponse } from "@/types/userType";
-import { UserQuery } from "@/validations/userSchema";
+import { ApiUserResponseWrapper, ApiStatsResponseWrapper, User, UserQuery, UserResponse, UserStats, UpdateUserInput } from "@/types/userType";
 // Impor tipe dari file schema
 
 export const userService = {
@@ -30,13 +29,32 @@ export const userService = {
     }
   },
 
-  async getUserStats() {
+  async getUserStats(): Promise<UserStats> {
     try {
-      const response = await axiosInstance.get('/users/stats');
+      const response = await axiosInstance.get<ApiStatsResponseWrapper>('/users/stats');
       return response.data.data;
     } catch (error) {
       console.error('Failed to fetch user stats:', error);
       throw new Error('Failed to fetch user stats. Please try again later.');
+    }
+  },
+
+  async updateUser(id: string | number, data: UpdateUserInput): Promise<User> {
+    try {
+      const response = await axiosInstance.patch(`/users/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      throw new Error('Failed to update user. Please try again later.');
+    }
+  },
+
+  async deleteUser(id: string | number): Promise<void> {
+    try {
+      await axiosInstance.delete(`/users/${id}`);
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      throw new Error('Failed to delete user. Please try again later.');
     }
   },
 }

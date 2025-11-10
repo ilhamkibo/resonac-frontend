@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function page() {
   return (
     <div>
-      <div className='flex flex-col gap-4 max-w-5xl mx-auto'>
+      <div className='flex flex-col gap-4 max-w-7xl mx-auto'>
         <UsersCard />
         <ThresholdsCard />
       </div>

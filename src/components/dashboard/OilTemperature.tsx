@@ -8,13 +8,13 @@ import { useQuery } from "@tanstack/react-query";
 import { measurementService } from "@/services/measurementService";
 import { thresholdService } from "@/services/thresholdService";
 import { measurementData } from "@/types/measurementType";
-import { thresholdData } from "@/types/thresholdType";
+import { ThresholdResponse } from "@/types/thresholdType";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 type OilTemperatureProps = {
   initialMeasurements: measurementData[];
-  initialThresholds: thresholdData[];
+  initialThresholds: ThresholdResponse;
 };
 
 export default function OilTemperature({ initialMeasurements, initialThresholds }: OilTemperatureProps) {
@@ -80,8 +80,8 @@ export default function OilTemperature({ initialMeasurements, initialThresholds 
   }, [realtime]);
 
   // ====== CHART OPTIONS ======
-  const lowerLimit = thresholdData?.data?.[0]?.lowerLimit ?? 0;
-  const upperLimit = thresholdData?.data?.[0]?.upperLimit ?? 100;
+  const lowerLimit = thresholdData[0]?.lowerLimit ?? 0;
+  const upperLimit = thresholdData[0]?.upperLimit ?? 100;
 
   const options: ApexOptions = {
     chart: {

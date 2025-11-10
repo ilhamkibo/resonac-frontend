@@ -5,7 +5,7 @@ import { jwtVerify } from 'jose';
 
 // Daftar rute
 const publicRoutes = ['/signin', '/signup'];
-const protectedRoutes = [ '/historyyy'];
+const protectedRoutes = [ '/admin'];
 
 const getJwtSecretKey = () => {
   const secret = process.env.JWT_ACCESS_SECRET;
@@ -23,13 +23,13 @@ export async function middleware(request: NextRequest) {
   // Jika mencoba akses rute yang dilindungi
   if (protectedRoutes.some(p => pathname.startsWith(p))) {
     if (!token) {
-      return NextResponse.redirect(new URL('/signin', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     }
     try {
       await jwtVerify(token, getJwtSecretKey());
       return NextResponse.next();
     } catch (error) {
-      const response = NextResponse.redirect(new URL('/signin', request.url));
+      const response = NextResponse.redirect(new URL('/', request.url));
       response.cookies.delete('accessToken');
       return response;
     }

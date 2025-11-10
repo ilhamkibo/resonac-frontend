@@ -27,3 +27,16 @@ axiosInstance.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// ✅ Buat Interceptor
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response.status === 401) {
+      // Jika token tidak valid, hapus cookie dan redirect ke halaman login
+      Cookies.remove('accessToken');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);

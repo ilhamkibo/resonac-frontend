@@ -1,38 +1,13 @@
-import { Pagination } from "./apiType";
+import { UpdateUserSchema, UserQuerySchema, UserResponseSchema, UserSchema, UserStatsSchema } from "@/validations/userSchema";
+import z from "zod";
+import { ApiResponseWrapper } from "./apiType";
 
-// Tipe data untuk User (sesuai respons backend Anda)
-export type User = {
-  id: string | number;
-  email: string;
-  name: string;
-  role: 'operator' | 'admin';
-  isApproved: boolean;
-  created_at: string | Date; // Sesuaikan dengan tipe data Anda
-};
 
-// Tipe untuk data Pagination
+export type ApiUserResponseWrapper = ApiResponseWrapper<UserResponse>;
+export type ApiStatsResponseWrapper = ApiResponseWrapper<UserStats>;
 
-// Tipe untuk respons API getAllUsers
-export type UserResponse = {
-  data: User[];
-  pagination: Pagination;
-};
-
-export type ApiUserResponseWrapper = {
-  status: string;
-  message: string;
-  data: UserResponse; // <-- Ini adalah tipe { data: User[], pagination: ... }
-};
-
-// 2. Definisikan juga tipe untuk Stats (jika Anda menggunakannya)
-export type ApiStatsResponseWrapper = {
-  status: string;
-  message: string;
-  data: UserStats; // Asumsi stats Anda juga dibungkus
-};
-
-export type UserStats = {
-  userCount: number;
-  approvedUserCount: number;
-  unapprovedUserCount: number;
-};
+export type User = z.infer<typeof UserSchema>;
+export type UserResponse = z.infer<typeof UserResponseSchema>;
+export type UserStats = z.infer<typeof UserStatsSchema>;
+export type UserQuery = z.infer<typeof UserQuerySchema>;
+export type UpdateUserInput = z.infer<typeof UpdateUserSchema>;
