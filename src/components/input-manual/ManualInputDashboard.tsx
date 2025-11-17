@@ -1,62 +1,111 @@
-// components/input-manual/ManualInputDashboard.tsx
-"use client"; // ✅ INI adalah Client Component
+"use client";
 
-import { useState } from "react";
-import HistoryTable from "@/components/input-manual/HistoryTable";
-import SaveButton from "@/components/input-manual/SaveButton";
-import { AmpereCardGroup } from "@/components/input-manual/AmpereCardGroup";
-import { OilPressureCard } from "@/components/input-manual/OilPressureCard";
-import { OilTemperatureCard } from "@/components/input-manual/OilTemperatureCard";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+
+import HistoryTable, { Row, formatServerDataToRow } from "./HistoryTable";
+import SaveButton from "./SaveButton";
+
+import { AmpereCardGroup } from "./AmpereCardGroup";
+import { OilPressureCard } from "./OilPressureCard";
+import { OilTemperatureCard } from "./OilTemperatureCard";
+
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
-import { RealtimeData } from "@/types/mqttType";
-import { useAuth } from "@/hooks/useAuth";
-import { ThresholdResponse } from "@/types/thresholdType";
+import { manualInputService } from "@/services/manualInputService";
 
-// Tentukan tipe props yang diterima dari Server Component
-type Row = { /* ... Tipe Row Anda ... */ }
+import { ThresholdResponse } from "@/types/thresholdType";
+import { ApiResponseWrapper } from "@/types/apiType";
+import { ManualInputResponse } from "@/types/manualInputType";
+import { RealtimeData } from "@/types/mqttType";
+import ManualInputFilter from "./ManualInputFilter";
 
 interface DashboardProps {
   thresholds: ThresholdResponse;
+  initialManualInputs: ApiResponseWrapper<ManualInputResponse>;
 }
 
-export default function ManualInputDashboard({ 
-  thresholds
+export default function ManualInputDashboard({
+  thresholds,
+  initialManualInputs
 }: DashboardProps) {
 
-  // 1. 'tableData' diinisialisasi dengan data dari server
-  const [tableData, setTableData] = useState<Row[]>([]);
-  
-  // 2. Logika client-side (MQTT, Auth) tetap di sini
-  const mqttData = useMqttSubscription<{realtime: RealtimeData}>("toho/resonac/value");
-  const { user } = useAuth();
+  const mqttData = useMqttSubscription<{ realtime: RealtimeData }>("toho/resonac/value");
 
-  // 3. Fungsi untuk update tabel (seperti sebelumnya)
-  const handleSaveSuccess = (savedData: RealtimeData, savedTime: string) => {
-    const newRow: Row = {
-      id: new Date().getTime(), // (Atau ID dari respons server)
-      time: new Date(savedTime).toLocaleString('id-ID'),
-      operator: user?.name || "Unknown",
-      oilPressMain: savedData.main.oil_pressure,
-      oilPressPilot: savedData.pilot.oil_pressure,
-      mainR: savedData.main.ampere_r,
-      mainS: savedData.main.ampere_s,
-      mainT: savedData.main.ampere_t,
-      pilotR: savedData.pilot.ampere_r,
-      pilotS: savedData.pilot.ampere_s,
-      pilotT: savedData.pilot.ampere_t,
-      oilTemp: savedData.oil.temperature,
-    };
-    setTableData(prevData => [newRow, ...prevData]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [activeFilter, setActiveFilter] = useState<"period" | "date" | null>("period");
+
+  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  // Query manual inputs
+  const { data: manualInput } = useQuery({
+    queryKey: ["manual-inputs", page, period, startDate, endDate, limit],
+    queryFn: () =>
+      manualInputService.getManualInputs({
+        page,
+        limit,
+        ...(activeFilter === "period" ? { period } : {}),
+        ...(activeFilter === "date" && startDate && endDate
+          ? { startDate, endDate }
+          : {}),
+      }),
+    placeholderData: initialManualInputs
+  });
+
+  const rows: Row[] = useMemo(() => {
+    return manualInput?.data?.data
+      ? manualInput.data.data.map(formatServerDataToRow)
+      : [];
+  }, [manualInput]);
+
+  const meta = manualInput?.data?.meta;
+
+  // Export CSV
+  const exportToCSV = () => {
+    if (!rows.length) return;
+
+    const header = Object.keys(rows[0]).join(",");
+    const values = rows
+      .map((r) =>
+        Object.values(r)
+          .map((v) => `"${v ?? ""}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([header + "\n" + values], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "manual-input-history.csv";
+    link.click();
   };
 
-  const minMaxAmpereMainPump = thresholds.filter(t => t.area === "main").filter(t => t.parameter === "ampere").map(t => ({ min: t.lowerLimit, max: t.upperLimit }));
-  const minMaxAmperePilotPump = thresholds.filter(t => t.area === "pilot").filter(t => t.parameter === "ampere").map(t => ({ min: t.lowerLimit, max: t.upperLimit }));
-  const minMaxOilTemp = thresholds.filter(t => t.area === "oil").filter(t => t.parameter === "temp").map(t => ({ min: t.lowerLimit, max: t.upperLimit }));
-  const minMaxOilPressure = thresholds.filter(t => t.parameter === "pressure").map(t => ({ area: t.area, min: t.lowerLimit, max: t.upperLimit }));
+  const lastManualInput = rows[0];
+
+  // Prepare thresholds
+  const minMaxAmpereMainPump = thresholds
+    .filter((t) => t.area === "main" && t.parameter === "ampere")[0];
+
+  const minMaxAmperePilotPump = thresholds
+    .filter((t) => t.area === "pilot" && t.parameter === "ampere")[0];
+
+  const minMaxOilTemp = thresholds
+    .filter((t) => t.area === "oil" && t.parameter === "temp")[0];
+
+  const minMaxOilPressure = thresholds.filter(
+    (t) => t.parameter === "pressure"
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [limit]);
 
   return (
     <div className="p-6">
       
+      {/* Realtime Cards */}
       <div className="grid md:grid-cols-2 gap-4">
         <AmpereCardGroup
           title="Main Pump"
@@ -65,47 +114,68 @@ export default function ManualInputDashboard({
             { label: "S", value: mqttData?.realtime?.main?.ampere_s },
             { label: "T", value: mqttData?.realtime?.main?.ampere_t },
           ]}
-          // 5. Teruskan threshold ke kartu
-          thresholds={minMaxAmpereMainPump[0]} 
+          thresholds={minMaxAmpereMainPump}
         />
+
         <AmpereCardGroup
           title="Pilot Pump"
           data={[
-             { label: "R", value: mqttData?.realtime?.pilot?.ampere_r },
-             { label: "S", value: mqttData?.realtime?.pilot?.ampere_s },
-             { label: "T", value: mqttData?.realtime?.pilot?.ampere_t },
+            { label: "R", value: mqttData?.realtime?.pilot?.ampere_r },
+            { label: "S", value: mqttData?.realtime?.pilot?.ampere_s },
+            { label: "T", value: mqttData?.realtime?.pilot?.ampere_t },
           ]}
-          thresholds={minMaxAmperePilotPump[0]}
+          thresholds={minMaxAmperePilotPump}
         />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 mt-6">
-        <OilPressureCard 
-          data={{ 
+        <OilPressureCard
+          title="Main Oil Pressure"
+          data={{
             main: mqttData?.realtime?.main?.oil_pressure,
-            pilot: mqttData?.realtime?.pilot?.oil_pressure 
-          }}          title="Main Oil Pressure"
-          thresholds={minMaxOilPressure} // (Sesuaikan)
+            pilot: mqttData?.realtime?.pilot?.oil_pressure,
+          }}
+          thresholds={minMaxOilPressure}
         />
-        <OilTemperatureCard 
+
+        <OilTemperatureCard
           title="Oil Temperature"
           data={{ value: mqttData?.realtime?.oil?.temperature }}
-          thresholds={minMaxOilTemp[0]}
+          thresholds={minMaxOilTemp}
         />
       </div>
 
+      {/* Save Button */}
       <div className="mt-6">
         <SaveButton 
           mqttData={mqttData?.realtime} 
-          onSaveSuccess={handleSaveSuccess} 
-        />
+          lastManualInput={lastManualInput}
+        />     
       </div>
 
+      {/* Filters */}
+      <ManualInputFilter
+        activeFilter={activeFilter}
+        setActiveFilter={setActiveFilter}
+        period={period}
+        setPeriod={setPeriod}
+        startDate={startDate}
+        endDate={endDate}
+        setStartDate={setStartDate}
+        setEndDate={setEndDate}
+        limit={limit}
+        setLimit={setLimit}
+        exportToCSV={exportToCSV}
+      />
+
+      {/* Table */}
       <div className="mt-6">
-        {/* 6. Tabel diisi dengan state yang sudah diinisialisasi */}
-        <HistoryTable tableData={tableData} />
+        <HistoryTable
+          rows={rows}
+          meta={meta}
+          onPageChange={setPage}
+        />
       </div>
-      
     </div>
   );
 }

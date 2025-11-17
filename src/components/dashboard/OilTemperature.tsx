@@ -7,13 +7,13 @@ import { RealtimeData } from "@/types/mqttType";
 import { useQuery } from "@tanstack/react-query";
 import { measurementService } from "@/services/measurementService";
 import { thresholdService } from "@/services/thresholdService";
-import { measurementData } from "@/types/measurementType";
+import { MeasurementData } from "@/types/measurementType";
 import { ThresholdResponse } from "@/types/thresholdType";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 type OilTemperatureProps = {
-  initialMeasurements: measurementData[];
+  initialMeasurements: MeasurementData[];
   initialThresholds: ThresholdResponse;
 };
 
@@ -53,8 +53,8 @@ export default function OilTemperature({ initialMeasurements, initialThresholds 
   // Efek ini sekarang hanya berjalan sekali saat 'measurementData' pertama kali tersedia.
   useEffect(() => {
     if (measurementData?.data?.length) {
-      const temps = measurementData.data.map((item: measurementData) => item.oil_temperature);
-      const times = measurementData.data.map((item: measurementData) =>
+      const temps = measurementData.data.map((item: MeasurementData) => item.oil_temperature);
+      const times = measurementData.data.map((item: MeasurementData) =>
         new Date(item.timestamp).toLocaleTimeString("id-ID", { hour12: false })
       );
 
@@ -100,6 +100,9 @@ export default function OilTemperature({ initialMeasurements, initialThresholds 
     yaxis: {
       min: lowerLimit - 5,
       max: upperLimit + 5,
+    },
+    tooltip: {
+      enabled: false,
     },
     annotations: {
       yaxis: [

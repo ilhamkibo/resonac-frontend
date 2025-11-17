@@ -1,4 +1,6 @@
 import { axiosInstance } from "@/lib/api/axios";
+import { ApiResponseWrapper } from "@/types/apiType";
+import { ManualInputQuery, ManualInputResponse } from "@/types/manualInputType";
 import { RealtimeData } from "@/types/mqttType"; // Asumsi tipe data Anda
 
 // Fungsi untuk mengirim data manual
@@ -8,6 +10,22 @@ interface ApiManualInputPayload {
   details: any[];
 }
 
+const cleanParams = (params: Record<string, any>) => {
+  const cleaned: Record<string, string> = {};
+  for (const key in params) {
+    const value = params[key];
+    if (value !== null && value !== undefined && value !== "") {
+      // Ubah Date menjadi string ISO, biarkan sisanya sebagai string
+      if (value instanceof Date) {
+        cleaned[key] = value.toISOString();
+      } else {
+        cleaned[key] = String(value);
+      }
+    }
+  }
+  return cleaned;
+};
+ 
 export const manualInputService = {
     async submitInput(data: RealtimeData, userId: number) {// ✅ 3. Buat timestamp
         const timestamp = new Date().toISOString();
@@ -40,14 +58,12 @@ export const manualInputService = {
         return response; 
     },
 
-    async getManualInputs(page: number, limit: number) {
+    async getManualInputs(params: ManualInputQuery): Promise<ApiResponseWrapper<ManualInputResponse>> {
         try {
+        const cleaned = cleanParams(params);
         // Kirim 'page' dan 'limit' sebagai query params ke backend
         const response = await axiosInstance.get('/manual-inputs', {
-            params: {
-            page,
-            limit
-            }
+            params: cleaned
         });
         
         // Kembalikan data dan totalCount
@@ -55,7 +71,8 @@ export const manualInputService = {
 
         } catch (error) {
             // Kembalikan data kosong jika error
-            return { data: [], totalCount: 0, page: 1, limit: 10 };
+            console.error('Failed to fetch manual inputs:', error);
+            throw new Error('Failed to fetch manual inputs. Please try again later.');
         }
     }
 

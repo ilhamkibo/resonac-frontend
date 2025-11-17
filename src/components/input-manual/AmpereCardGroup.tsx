@@ -8,7 +8,13 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false })
 interface AmpereCardProps {
   title: string;
   data: { label: string; value: number | undefined }[];
-  thresholds?: { min: number; max: number };
+  thresholds?: { 
+    id: number;
+    area: string;
+    parameter: string;
+    lowerLimit: number;
+    upperLimit: number;
+    createdAt: string; };
 }
 
 export function AmpereCardGroup({ title, data, thresholds }: AmpereCardProps) {
@@ -82,14 +88,14 @@ export function AmpereCardGroup({ title, data, thresholds }: AmpereCardProps) {
       } 
     },
     yaxis: {
-      min: thresholds ? thresholds.min - 10 : 0,
-      max: thresholds ? thresholds.max + 10 : 100,
+      min: thresholds ? thresholds.lowerLimit - 10 : 0,
+      max: thresholds ? thresholds.upperLimit + 10 : 100,
       labels: { style: { colors: "#9CA3AF" }, formatter: (v) => v + " A" },
     },
     annotations: {
       yaxis: [
-        thresholds ? { y: thresholds.max, borderColor: "#ef4444", label: { text: `Max (${thresholds.max}A)` } } : {},
-        thresholds ? { y: thresholds.min, borderColor: "#3b82f6", label: { text: `Min (${thresholds.min}A)` } } : {},
+        thresholds ? { y: thresholds.upperLimit, borderColor: "#ef4444", label: { text: `Max (${thresholds.upperLimit}A)` } } : {},
+        thresholds ? { y: thresholds.lowerLimit, borderColor: "#3b82f6", label: { text: `Min (${thresholds.lowerLimit}A)` } } : {},
       ],
     },
   };

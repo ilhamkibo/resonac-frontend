@@ -51,7 +51,13 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false })
 interface TempCardProps {
   title: string;
   data: { value: number | undefined }; 
-  thresholds?: { min: number; max: number }; // Threshold dari server
+  thresholds?: {  
+    id: number;
+    area: string;
+    parameter: string;
+    lowerLimit: number;
+    upperLimit: number;
+    createdAt: string; }; // Threshold dari server
 }
 
 export function OilTemperatureCard({ title, data, thresholds }: TempCardProps) {
@@ -110,8 +116,8 @@ export function OilTemperatureCard({ title, data, thresholds }: TempCardProps) {
       } 
     },
     yaxis: {
-      min: thresholds ? thresholds.min - 5 : 0, 
-      max: thresholds ? thresholds.max + 5 : 100, // Default max 100
+      min: thresholds ? thresholds.lowerLimit - 5 : 0, 
+      max: thresholds ? thresholds.upperLimit + 5 : 100, // Default upperLimit 100
       labels: { 
         style: { 
           colors: "#9CA3AF" 
@@ -121,8 +127,8 @@ export function OilTemperatureCard({ title, data, thresholds }: TempCardProps) {
     },
     annotations: {
       yaxis: [
-        thresholds ? { y: thresholds.max, borderColor: "#ef4444", label: { text: `Max (${thresholds.max}°C)` } } : {},
-        thresholds ? { y: thresholds.min, borderColor: "#3b82f6", label: { text: `Min (${thresholds.min}°C)` } } : {},
+        thresholds ? { y: thresholds.upperLimit, borderColor: "#ef4444", label: { text: `Max (${thresholds.upperLimit}°C)` } } : {},
+        thresholds ? { y: thresholds.lowerLimit, borderColor: "#3b82f6", label: { text: `Min (${thresholds.lowerLimit}°C)` } } : {},
       ],
     },
   };

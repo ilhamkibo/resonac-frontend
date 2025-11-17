@@ -7,17 +7,18 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { manualInputService } from "@/services/manualInputService"; // Pastikan path ini benar
-
+import { Row } from "./HistoryTable";
+import { isInCurrentShiftInterval } from "../utils/shift";
+import Button from "../ui/button/Button";
 
 export default function SaveButton({ 
   mqttData, 
-  onSaveSuccess 
+  lastManualInput
 }: { 
   mqttData: RealtimeData | undefined, 
-  onSaveSuccess: (savedData: RealtimeData, savedTime: string) => void 
+  lastManualInput: Row | null;
 }) {
 
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
   const { user } = useAuth(); // Anda sudah memiliki 'user'
   const { openModal } = useAuthModal();
   const [capturedData, setCapturedData] = useState<RealtimeData | null>(null);
@@ -29,14 +30,12 @@ export default function SaveButton({
     onSuccess: () => {
       const now = new Date().toLocaleString("id-ID");
       const isoNow = new Date().toISOString();
-      setLastSaved(now);
       toast.success("Data berhasil disimpan!");
       
-      if (capturedData) {
-        onSaveSuccess(capturedData, isoNow);
-      }
-      
       setCapturedData(null);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
     onError: (error: any) => {
 
@@ -55,21 +54,37 @@ export default function SaveButton({
   });
 
   const handleCaptureData = () => {
-      // ... (Fungsi ini tidak perlu diubah)
+    if (lastManualInput?.time) {
+      const res = isInCurrentShiftInterval(lastManualInput.time);
+
+      if (res.reason === "unparseable") {
+        console.warn("Tidak bisa parse timestamp lastManualInput:", lastManualInput.time);
+      }
+
+      if (res.isInCurrentShift) {
+        const lastDateStr = res.lastDate 
+          ? res.lastDate.toLocaleString() 
+          : lastManualInput.time; // fallback
+
+        toast.error(`Data untuk hari ini dan shift ini sudah ada (tercatat pada: ${lastDateStr}).`);
+        return;
+      }
+    }
+
     if (mqttData) {
-    setCapturedData(mqttData);
-    toast.info("Data terbaru telah diambil. Silakan periksa dan simpan.");
+      setCapturedData(mqttData);
+      toast.info("Data terbaru telah diambil. Silakan periksa dan simpan.");
     } else {
-    toast.error("Data MQTT tidak tersedia. Coba lagi sesaat.");
+      toast.error("Data MQTT tidak tersedia. Coba lagi sesaat.");
     }
   };
 
- const handleSaveData = () => {
-  if (!capturedData) {
-   toast.error("Tidak ada data yang diambil.");
-   return;
-  }
-    
+  const handleSaveData = () => {
+    if (!capturedData) {
+    toast.error("Tidak ada data yang diambil.");
+    return;
+    }
+      
     // ✅ 8. Tambahkan pengecekan untuk user dan user.id
     if (!user || typeof user.userId === 'undefined') {
       toast.error("Sesi pengguna tidak ditemukan. Silakan login ulang.");
@@ -77,12 +92,12 @@ export default function SaveButton({
       return;
     }
 
-    // ✅ 9. Kirim data dan userId ke mutasi
-  mutation.mutate({
+      // ✅ 9. Kirim data dan userId ke mutasi
+    mutation.mutate({
       data: capturedData,
       userId: user.userId // Asumsi user.id tersedia dari useAuth()
     });
- };
+  };
 
  const handleCancel = () => {
     // ... (Fungsi ini tidak perlu diubah)
@@ -146,45 +161,42 @@ export default function SaveButton({
           */}
           {capturedData ? (
             <div className="flex justify-center space-x-4">
-              {/* Tombol "Simpan Data" */}
-              <button
+              <Button
                 onClick={handleSaveData}
                 disabled={mutation.isPending}
                 className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
               >
                 {mutation.isPending ? "Menyimpan..." : "Konfirmasi & Simpan Data"}
-              </button>
-              {/* Tombol "Batal" */}
-              <button
+              </Button>
+              <Button
                 onClick={handleCancel}
                 disabled={mutation.isPending}
                 className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
               >
                 Batal
-              </button>
+              </Button>
             </div>
           ) : (
-            // Tombol "Ambil Data" (default)
-            <button
+            <Button
               onClick={handleCaptureData}
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+
             >
               Ambil Data Manual
-            </button>
+            </Button>
           )}
 
           <h1 className="mt-3 text-gray-500 dark:text-gray-400 text-xl">
-            {lastSaved ? `Penyimpanan terakhir: ${lastSaved}` : "Belum ada penyimpanan"}
+            {lastManualInput?.time ? `Penyimpanan terakhir: ${lastManualInput.time} oleh ${lastManualInput.operator}` : "Belum ada penyimpanan"}
           </h1>
         </>
       ) : (
-        // === USER BELUM LOGIN ===
-        <button
+        <Button
           className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition"
           onClick={() => openModal('signIn')}
         >
           Sign In Untuk Menyimpan Data
-        </button>
+        </Button>
       )}
     </div>
   );

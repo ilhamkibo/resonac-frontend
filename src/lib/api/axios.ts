@@ -3,6 +3,7 @@ import Cookies from 'js-cookie'; // Impor js-cookie di sini juga
 
 export const axiosInstance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
+    // baseURL: "/api",
     headers: {
         "Content-Type": "application/json",
     },

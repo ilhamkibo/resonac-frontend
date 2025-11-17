@@ -1,18 +1,8 @@
-/**
- * Mewakili satu baris data yang sudah di-transform (flat)
- * untuk ditampilkan di HistoryTable.
- */
-export type Row = {
-  id: string;
-  time: string;           // Timestamp yang sudah diformat
-  operatorName: string;   // Nama user (atau "User {id}")
-  mainR: number;
-  mainS: number;
-  mainT: number;
-  oilPressMain: number;
-  pilotR: number;
-  pilotS: number;
-  pilotT: number;
-  oilPressPilot: number;
-  oilTemp: number;
-};
+import { ManualInputDetailsSchema, ManualInputQuerySchema, ManualInputResponseSchema, ManualInputSchema } from "@/validations/manualInputSchema";
+import z from "zod";
+
+
+export type ManualInput = z.infer<typeof ManualInputSchema>;
+export type ManualInputDetails = z.infer<typeof ManualInputDetailsSchema>;
+export type ManualInputQuery = z.infer<typeof ManualInputQuerySchema>;
+export type ManualInputResponse = z.infer<typeof ManualInputResponseSchema>;

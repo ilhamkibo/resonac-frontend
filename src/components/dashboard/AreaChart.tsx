@@ -6,7 +6,7 @@ import { ApexOptions } from "apexcharts";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function LineChart({
+export default function AreaChart({
   title,
   unit,
   upperThreshold = 0.8,
@@ -62,7 +62,7 @@ export default function LineChart({
       background: "transparent",
       toolbar: { show: false },
       zoom: { enabled: false },
-      animations: { enabled: true, easing: "easeinout", speed: 600 },
+      animations: { enabled: true, speed: 600 },
     },
     stroke: {
       curve: "smooth",

@@ -11,7 +11,13 @@ type Props = {
     pilot: number | undefined;
   };
   title: string
-  thresholds: { area: string; max: number; min: number }[];
+  thresholds: { 
+    id: number;
+    area: string;
+    parameter: string;
+    lowerLimit: number;
+    upperLimit: number;
+    createdAt: string; }[];
 };
 
 export function OilPressureCard({ data, title, thresholds }: Props) {
@@ -19,8 +25,8 @@ export function OilPressureCard({ data, title, thresholds }: Props) {
   const mainValue = data.main ?? 0;
   const pilotValue = data.pilot ?? 0;
 
-  const maxPressureMainPump = thresholds.find((t) => t.area === "main")?.max || 0;
-  const maxPressurePilotPump = thresholds.find((t) => t.area === "pilot")?.max || 0;
+  const maxPressureMainPump = thresholds.find((t) => t.area === "main")?.upperLimit || 0;
+  const maxPressurePilotPump = thresholds.find((t) => t.area === "pilot")?.upperLimit || 0;
 
   const getColor = (v: number, maxPressure: number) => {
     if (maxPressure === 0) return "#3b82f6"; // Hindari pembagian nol

@@ -1,4 +1,4 @@
-export interface measurementData {
+export interface MeasurementData {
   id: number;
   timestamp: string;
   area: string;
