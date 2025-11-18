@@ -1,9 +1,14 @@
-import React from 'react'
+import HistoryCompareCard from "@/components/error-history/HistoryCompareCard";
+import { errorHistoryService } from "@/services/errorHistoryService";
+import React from "react";
 
-export default function page() {
+export default async function Page() {
+
+  const compareData = await errorHistoryService.getErrorHistoryCompare();
+
   return (
-    <div>
-      Test
+    <div className="p-6">
+      <HistoryCompareCard {...compareData.data} />
     </div>
-  )
+  );
 }
