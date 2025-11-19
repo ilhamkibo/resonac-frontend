@@ -7,9 +7,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import { manualInputService } from "@/services/manualInputService"; // Pastikan path ini benar
-import { Row } from "./HistoryTable";
 import { isInCurrentShiftInterval } from "../utils/shift";
 import Button from "../ui/button/Button";
+import { Row } from "./ManualInputDashboard";
 
 export default function SaveButton({ 
   mqttData, 
@@ -162,6 +162,7 @@ export default function SaveButton({
           {capturedData ? (
             <div className="flex justify-center space-x-4">
               <Button
+                size="sm"
                 onClick={handleSaveData}
                 disabled={mutation.isPending}
                 className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
@@ -169,6 +170,7 @@ export default function SaveButton({
                 {mutation.isPending ? "Menyimpan..." : "Konfirmasi & Simpan Data"}
               </Button>
               <Button
+                size="sm"
                 onClick={handleCancel}
                 disabled={mutation.isPending}
                 className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition disabled:opacity-50"
@@ -178,6 +180,7 @@ export default function SaveButton({
             </div>
           ) : (
             <Button
+              size="sm"
               onClick={handleCaptureData}
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
 

@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import HistoryTable, { Row, formatServerDataToRow } from "./HistoryTable";
+import HistoryTable from "./HistoryTable";
 import SaveButton from "./SaveButton";
 
 import { AmpereCardGroup } from "./AmpereCardGroup";
@@ -23,6 +23,43 @@ interface DashboardProps {
   thresholds: ThresholdResponse;
   initialManualInputs: ApiResponseWrapper<ManualInputResponse>;
 }
+
+export type Row = {
+  id: number | string;
+  time: string;
+  operator: string | number;
+  oilPressMain: number | null;
+  oilPressPilot: number | null;
+  mainR: number | null;
+  mainS: number | null;
+  mainT: number | null;
+  pilotR: number | null;
+  pilotS: number | null;
+  pilotT: number | null;
+  oilTemp: number | null;
+};
+
+
+const formatServerDataToRow = (input: any): Row => {
+  const mainPump = input.details.find((d: any) => d.area === "main");
+  const pilotPump = input.details.find((d: any) => d.area === "pilot");
+  const oil = input.details.find((d: any) => d.area === "oil");
+
+  return {
+    id: input.id,
+    time: new Date(input.timestamp).toLocaleString("id-ID"),
+    operator: input.username,
+    oilPressMain: mainPump?.oil_pressure ?? null,
+    mainR: mainPump?.ampere_r ?? null,
+    mainS: mainPump?.ampere_s ?? null,
+    mainT: mainPump?.ampere_t ?? null,
+    oilPressPilot: pilotPump?.oil_pressure ?? null,
+    pilotR: pilotPump?.ampere_r ?? null,
+    pilotS: pilotPump?.ampere_s ?? null,
+    pilotT: pilotPump?.ampere_t ?? null,
+    oilTemp: oil?.oil_temperature ?? null,
+  };
+};
 
 export default function ManualInputDashboard({
   thresholds,

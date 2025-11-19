@@ -3,6 +3,9 @@
 import { memo, useCallback } from "react";
 import DatePicker from "../form/date-picker";
 import flatpickr from "flatpickr";
+import Select from "../form/Select";
+import { ChevronDownIcon } from "lucide-react";
+import Button from "../ui/button/Button";
 
 interface FiltersProps {
   activeFilter: "period" | "date" | null;
@@ -27,8 +30,6 @@ function ManualInputFilter({
   setActiveFilter,
   period,
   setPeriod,
-  startDate,
-  endDate,
   setStartDate,
   setEndDate,
   limit,
@@ -59,8 +60,9 @@ function ManualInputFilter({
       <div className="flex gap-4 items-center">
 
         {/* FILTER BUTTONS */}
-        <button
-          className={`px-4 py-2 rounded ${activeFilter === "period" ? "bg-emerald-600 text-white" : "bg-gray-300"}`}
+        <Button
+          size="sm"
+          className={`px-4 py-2 rounded ${activeFilter === "period" ? "bg-emerald-600 text-white" : "bg-gray-300"} hover:bg-emerald-700 hover:text-white`}
           onClick={() => {
             setActiveFilter("period");
             setStartDate("");
@@ -68,65 +70,82 @@ function ManualInputFilter({
           }}
         >
           Period
-        </button>
+        </Button>
+          
 
-        <button
-          className={`px-4 py-2 rounded ${activeFilter === "date" ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+        <Button
+          size="sm"
+          className={`px-4 py-2 rounded ${activeFilter === "date" ? "bg-blue-600 text-white" : "bg-gray-300"} hover:bg-blue-700 hover:text-white`}
           onClick={() => {
             setActiveFilter("date");
             setPeriod("monthly");
           }}
         >
           Date Range
-        </button>
+        </Button>
 
-        {/* LIMIT SELECT */}
-        <select
-          value={limit}
-          onChange={(e) => setLimit(Number(e.target.value))}
-          className="border px-2 py-1 rounded text-gray-600 dark:text-gray-400"
-        >
-          <option value={5}>5 rows</option>
-          <option value={10}>10 rows</option>
-          <option value={20}>20 rows</option>
-          <option value={50}>50 rows</option>
-        </select>
+        
 
         {/* PERIOD FILTER */}
         {activeFilter === "period" && (
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as any)}
-            className="border px-2 py-1 rounded text-gray-600 dark:text-gray-400"
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
+          <div className="relative">
+           <Select
+              defaultValue={period}
+              className="border px-2 py-1 rounded text-gray-600 dark:text-gray-400"
+              onChange={(value) => setPeriod(value as "daily" | "weekly" | "monthly")}
+              options={[
+                { value: "daily", label: "Daily" },
+                { value: "weekly", label: "Weekly" },
+                { value: "monthly", label: "Monthly" },
+              ]}
+            />
+             <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+              <ChevronDownIcon/>
+            </span>
+          </div>
         )}
+         
 
         {/* DATE PICKERS */}
         {activeFilter === "date" && (
           <div className="flex gap-3">
             <DatePicker
               id="startDate"
-              label="Start Date"
               placeholder="Pilih tanggal mulai"
               onChange={handleStartChange}
             />
 
             <DatePicker
               id="endDate"
-              label="End Date"
               placeholder="Pilih tanggal akhir"
               onChange={handleEndChange}
             />
           </div>
         )}
 
-        <button onClick={exportToCSV} className="ml-auto bg-emerald-600 text-white px-4 py-2 rounded">
-          Export CSV
-        </button>
+        <div className="ml-auto space-x-4 flex">
+          {/* LIMIT SELECT */}
+          <div className="relative">
+            <Select 
+              defaultValue={limit.toString()}
+              className="border px-2 py-1 rounded text-gray-600 dark:text-gray-400"
+              onChange={(value) => setLimit(Number(value))}
+              options={[
+                { value: "5", label: "5 rows" },
+                { value: "10", label: "10 rows" },
+                { value: "25", label: "25 rows" },
+                { value: "50", label: "50 rows" },
+              ]}
+            />
+            <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+              <ChevronDownIcon/>
+            </span>
+          </div>
+          <Button size="sm" onClick={exportToCSV} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded">
+            Export CSV
+          </Button>
+        </div>
+
       </div>
     </div>
   );

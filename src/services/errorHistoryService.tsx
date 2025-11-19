@@ -3,19 +3,9 @@ import { ApiResponseWrapper } from "@/types/apiType";
 import {
   ErrorHistoryResponse,
   ErrorHistoryCompare,
-  ErrorHistory,
+  ErrorHistoryQuery,
 } from "@/types/errorHistoryType";
-import { ApiStatsResponseWrapper } from "@/types/userType";
 
-interface ErrorHistoryQuery {
-  page?: string;
-  limit?: string;
-  period?: string; // daily, weekly, monthly
-  startDate?: string;
-  endDate?: string;
-  area?: string;
-  parameter?: string | string[];
-}
 
 export const errorHistoryService = {
   /**
@@ -33,7 +23,6 @@ export const errorHistoryService = {
       if (query.endDate) params.append("endDate", query.endDate);
       if (query.area) params.append("area", query.area);
 
-      // parameter bisa array
       if (Array.isArray(query.parameter)) {
         query.parameter.forEach((p) => params.append("parameter", p));
       } else if (query.parameter) {
@@ -41,7 +30,7 @@ export const errorHistoryService = {
       }
 
       const response = await axiosInstance.get<ApiResponseWrapper<ErrorHistoryResponse>>(
-        "/error-history",
+        "/error-histories",
         { params }
       );
 
