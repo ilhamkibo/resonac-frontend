@@ -1,8 +1,10 @@
-export default function AreaItem({ item, maxErrorCount }: { item: any; maxErrorCount: number }) {
+import { AreaParameter, ParameterInArea } from "@/types/errorHistoryType";
+
+export default function AreaItem({ item, maxErrorCount }: { item: AreaParameter; maxErrorCount: number }) {
   const percentage = Math.round((item.total / maxErrorCount) * 100);
   const topIssue =
     item.parameters?.length > 0
-      ? item.parameters.reduce((a: any, b: any) => (a.count > b.count ? a : b))
+      ? item.parameters.reduce((a: ParameterInArea, b: ParameterInArea) => (a.count > b.count ? a : b))
       : null;
 
   return (

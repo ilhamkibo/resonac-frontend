@@ -1,3 +1,4 @@
+import { PaginationSchema } from "@/types/apiType";
 import z from "zod";
 
 export const ManualInputDetailsSchema = z.object({
@@ -35,10 +36,5 @@ export const ManualInputQuerySchema = z.object({
 
 export const ManualInputResponseSchema = z.object({
     data: z.array(ManualInputSchema),
-    meta: z.object({
-        total: z.number(),
-        page: z.number(),
-        limit: z.number(),
-        totalPages: z.number(),
-    }),
+    meta: PaginationSchema
 });

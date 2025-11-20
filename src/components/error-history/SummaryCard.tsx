@@ -14,8 +14,13 @@ export default function SummaryCard({ props }: { props: ErrorHistoryCompare }) {
     color: string;
     tag: string;
   }) => {
-    const percentage = previous > 0 ? ((current / previous) * 100).toFixed(1) : "0";
+    
+    let percentage: string | number = "-";
 
+    if (previous !== 0) {
+      percentage = (((current - previous) / previous) * 100).toFixed(1);
+    }
+    
     const isUp = current > previous;
 
     return (

@@ -13,14 +13,14 @@ import { OilTemperatureCard } from "./OilTemperatureCard";
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { manualInputService } from "@/services/manualInputService";
 
-import { ThresholdResponse } from "@/types/thresholdType";
 import { ApiResponseWrapper } from "@/types/apiType";
 import { ManualInputResponse } from "@/types/manualInputType";
 import { RealtimeData } from "@/types/mqttType";
 import ManualInputFilter from "./ManualInputFilter";
+import { Threshold } from "@/types/thresholdType";
 
 interface DashboardProps {
-  thresholds: ThresholdResponse;
+  thresholds: Threshold[];
   initialManualInputs: ApiResponseWrapper<ManualInputResponse>;
 }
 

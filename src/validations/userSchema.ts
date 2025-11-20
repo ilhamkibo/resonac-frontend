@@ -29,7 +29,7 @@ export const UpdateUserSchema = z.object({
 // Schema for the API response when getting all users
 export const UserResponseSchema = z.object({
   data: z.array(UserSchema),
-  pagination: PaginationSchema
+  meta: PaginationSchema
 });
 
 // Schema for the user stats

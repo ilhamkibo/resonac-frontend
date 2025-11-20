@@ -9,9 +9,10 @@ import { useModal } from '@/hooks/useModal';
 import { Modal } from '../ui/modal';
 import Button from '../ui/button/Button';
 import Pagination from '../tables/Pagination';
-import ValueCard from '../utils/ValueCard';
-import { User2Icon, CheckCircleIcon, XCircleIcon, GaugeIcon, GaugeCircle, GaugeCircleIcon, LucideGauge } from "lucide-react";
 import UserStatsCards from './UserStatsCards';
+import Select from '../form/Select';
+import { ChevronDownIcon } from 'lucide-react';
+import Label from '../form/Label';
 
 export default function UsersCard() {
   const [query, setQuery] = useState<UserQuery>({
@@ -34,7 +35,9 @@ export default function UsersCard() {
 
   const { data: queryResult, isLoading, isError, error } = useQuery<UserResponse, Error>({
     queryKey: ['users', query],
-    queryFn: () => userService.getAllUser(query),
+    queryFn: () => {
+      return userService.getAllUser(query);
+    },
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60,
   });
@@ -49,7 +52,7 @@ export default function UsersCard() {
   });
 
   const users = queryResult?.data;
-  const pagination = queryResult?.pagination;
+  const pagination = queryResult?.meta;
   const { isOpen, openModal, closeModal } = useModal();
 
   const deleteMutation = useMutation({
@@ -150,35 +153,51 @@ export default function UsersCard() {
         {/* Filters */}
         <div className="flex gap-4 mb-4">
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Status
-            </label>
-            <select
-              id="status"
-              name="status"
-              value={query.status || 'approved'}
-              onChange={handleFilterChange}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-              <option value="approved">Approved</option>
-              <option value="unapproved">Unapproved</option>
-            </select>
+            <Label>Status</Label>
+            <div className='relative'>
+              <Select
+                options={[
+                  { value: "approved", label: "Approved" },
+                  { value: "unapproved", label: "Unapproved" },
+                ]}
+                defaultValue={query.status}
+                placeholder="Status"
+                onChange={(value) =>
+                  setQuery(prev => ({
+                    ...prev,
+                    status: value as "approved" | "unapproved" | undefined,
+                    page: "1"
+                  }))
+                }
+              />
+              <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                  <ChevronDownIcon />
+              </span>
+            </div>
           </div>
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Role
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={query.role || ''}
-              onChange={handleFilterChange}
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md bg-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-              <option value="">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="operator">Operator</option>
-            </select>
+            <Label>Role</Label>
+            <div className="relative">
+                <Select
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "admin", label: "Admin" }, 
+                    { value: "operator", label: "Operator" },
+                  ]}
+                  defaultValue={query.role ?? "all"} // <= undefined → "" → tampil "All"
+                  placeholder="Role"
+                  onChange={(value) =>
+                    setQuery(prev => ({
+                      ...prev,
+                      role: value === "all" ? undefined : (value as "operator" | "admin"),
+                      page: "1"
+                    }))
+                  }
+                />
+                <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                    <ChevronDownIcon />
+                </span>
+            </div>
           </div>
         </div>
 
@@ -245,7 +264,7 @@ export default function UsersCard() {
                               }
                             />
                           </td>
-                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
+                          {/* <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
                             <select
                               value={editForm.isApproved ? "approved" : "unapproved"}
                               onChange={(e) => setEditForm({ ...editForm, isApproved: e.target.value === "approved" })}
@@ -258,8 +277,36 @@ export default function UsersCard() {
                               <option value="approved">Approved</option>
                               <option value="unapproved">Unapproved</option>
                             </select>
+                          </td> */}
+                          <td
+                            onKeyDown={(e: any) => {
+                              if (e.key === "Enter") handleSaveEdit(user.id);
+                              if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            className="p-3 text-sm font-medium text-gray-900 dark:text-white"
+                          >
+                            <div className='relative'>
+                              <Select
+                                options={[
+                                  { value: "approved", label: "Approved" },
+                                  { value: "unapproved", label: "Unapproved" },
+                                ]}
+                                defaultValue={editForm.isApproved ? "approved" : "unapproved"}
+                                onChange={(value) =>
+                                  setEditForm({
+                                    ...editForm,
+                                    isApproved: value === "approved",
+                                  })
+                                }
+                                className="w-full"
+                              />
+                              <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                  <ChevronDownIcon />
+                              </span>
+                            </div>
                           </td>
-                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
+
+                          {/* <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
                             <select
                               value={editForm.role}
                               onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
@@ -272,6 +319,35 @@ export default function UsersCard() {
                               <option value="operator">Operator</option>
                               <option value="admin">Admin</option>
                             </select>
+                          </td> */}
+                          <td 
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSaveEdit(user.id);
+                              if (e.key === "Escape") handleCancelEdit();
+                            }}
+                            tabIndex={0}
+                            className="p-3 text-sm font-medium text-gray-900 dark:text-white"
+                          >
+                            <div className='relative'>
+                              <Select
+                                options={[
+                                  { value: "operator", label: "Operator" },
+                                  { value: "admin", label: "Admin" },
+                                ]}
+                                defaultValue={editForm.role}
+                                onChange={(value) =>
+                                  setEditForm({
+                                    ...editForm,
+                                    role: value,
+                                  })
+                                }
+                                className="w-full"
+                              />
+                              <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                                <ChevronDownIcon />
+                              </span>
+                            </div>
+
                           </td>
                           <td className="p-3 flex gap-2 justify-center">
                             <Button

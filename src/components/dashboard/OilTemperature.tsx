@@ -7,14 +7,15 @@ import { RealtimeData } from "@/types/mqttType";
 import { useQuery } from "@tanstack/react-query";
 import { measurementService } from "@/services/measurementService";
 import { thresholdService } from "@/services/thresholdService";
-import { MeasurementData } from "@/types/measurementType";
-import { ThresholdResponse } from "@/types/thresholdType";
+import { MeasurementDashboard } from "@/types/measurementType";
+import { ChartData } from "@/types/chartType";
+import { Threshold } from "@/types/thresholdType";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 type OilTemperatureProps = {
-  initialMeasurements: MeasurementData[];
-  initialThresholds: ThresholdResponse;
+  initialMeasurements: MeasurementDashboard[];
+  initialThresholds: Threshold[];
 };
 
 export default function OilTemperature({ initialMeasurements, initialThresholds }: OilTemperatureProps) {
@@ -22,11 +23,14 @@ export default function OilTemperature({ initialMeasurements, initialThresholds 
   const mqttData = useMqttSubscription<{ realtime: RealtimeData }>("toho/resonac/value");
   const realtime = mqttData?.realtime;
 
-  // State untuk data chart
-  const [series, setSeries] = useState([{ name: "Temperature", data: [] as number[] }]);
-  const [categories, setCategories] = useState<string[]>([]);
-
   const MAX_POINTS = 50;
+
+   const [chartData, setChartData] = useState<ChartData>({
+    series: [{ name: "Temperature", data: [] }],
+    categories: []
+  });
+
+  const { series, categories } = chartData;
 
   // ✅ 2. Gunakan 'initialData' untuk menghidrasi TanStack Query
   const {
@@ -52,30 +56,41 @@ export default function OilTemperature({ initialMeasurements, initialThresholds 
   // ✅ 3. Sederhanakan useEffect untuk inisialisasi chart
   // Efek ini sekarang hanya berjalan sekali saat 'measurementData' pertama kali tersedia.
   useEffect(() => {
-    if (measurementData?.data?.length) {
-      const temps = measurementData.data.map((item: MeasurementData) => item.oil_temperature);
-      const times = measurementData.data.map((item: MeasurementData) =>
-        new Date(item.timestamp).toLocaleTimeString("id-ID", { hour12: false })
-      );
+    if (measurementData?.length) {
+      const temps = measurementData
+        .map((item) => item.oil_temperature ?? 0)
+        .reverse();
 
-      setSeries([{ name: "Temperature", data: temps.slice(-MAX_POINTS) }]);
-      setCategories(times.slice(-MAX_POINTS));
+      const times = measurementData
+        .map((item) =>
+          new Date(item.timestamp).toLocaleTimeString("id-ID", { hour12: false })
+        )
+        .reverse();
+
+      setChartData({
+        series: [{ name: "Temperature", data: temps.slice(-MAX_POINTS) }],
+        categories: times.slice(-MAX_POINTS),
+      });
     }
   }, [measurementData]);
 
   // useEffect untuk update MQTT (tetap sama)
   useEffect(() => {
     if (realtime?.oil?.temperature === undefined) return;
+
     const now = new Date().toLocaleTimeString("id-ID", { hour12: false });
-    setSeries((prev) => {
-      const newData = [...prev[0].data, realtime.oil.temperature];
+
+    setChartData((prev) => {
+      const newData = [...prev.series[0].data, realtime.oil.temperature];
       if (newData.length > MAX_POINTS) newData.shift();
-      return [{ ...prev[0], data: newData }];
-    });
-    setCategories((prev) => {
-      const newCats = [...prev, now];
+
+      const newCats = [...prev.categories, now];
       if (newCats.length > MAX_POINTS) newCats.shift();
-      return newCats;
+
+      return {
+        series: [{ ...prev.series[0], data: newData }],
+        categories: newCats,
+      };
     });
   }, [realtime]);
 
@@ -156,13 +171,24 @@ export default function OilTemperature({ initialMeasurements, initialThresholds 
         <ReactApexChart options={options} series={series} type="line" height={200} />
       </div>
 
-      <div className="col-span-1 flex flex-col justify-center w-full">
-        <h1 className="text-center">
-          <span className="text-6xl font-bold text-[#00a5c0]">
-            {realtime?.oil?.temperature ?? "-"} °C
-          </span>
-        </h1>
+     <div className="col-span-1 flex flex-col justify-center w-full">
+        <div className="flex justify-center">
+          {realtime?.oil?.temperature === undefined ? (
+            <div className="flex items-end gap-2">
+              {/* Skeleton Angka */}
+              <div className="w-24 h-12 bg-gray-300 dark:bg-gray-700 rounded-md animate-pulse" />
+
+              {/* Unit */}
+              <span className="text-6xl font-bold text-[#00a5c0]">°C</span>
+            </div>
+          ) : (
+            <span className="text-6xl font-bold text-[#00a5c0]">
+              {realtime.oil.temperature} °C
+            </span>
+          )}
+        </div>
       </div>
+
     </div>
   );
 }

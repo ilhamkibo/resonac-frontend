@@ -1,45 +1,7 @@
-// "use client";
-// import React, { useState } from 'react'
-// import { ErrorHistoryResponse } from '@/types/errorHistoryType'
-// import { useQuery } from '@tanstack/react-query';
-// import { errorHistoryService } from '@/services/errorHistoryService';
-// import { ApiResponseWrapper } from '@/types/apiType';
-
-// export default function DataErrorTable( props: ApiResponseWrapper<ErrorHistoryResponse>) {
-//     const [limit, setLimit] = useState(second)
-//     const [page, setPage] = useState(second)
-//     const [period, setPeriod] = useState(second)
-//     const [startDate, setStartDate] = useState(second)
-//     const [endDate, setEndDate] = useState(second)
-//     const [area, setArea] = useState(second)
-//     const [parameter, setParameter] = useState(second)
-
-//     const { data, isLoading, isError } = useQuery({
-//         queryKey: ['error-history'],
-//         queryFn: () => errorHistoryService.getErrorHistory({
-//             page: page,
-//             limit: limit,
-//             period: period,
-//             startDate: startDate,
-//             endDate: endDate,
-//             area: area,
-//             parameter: parameter
-//         }),
-//         placeholderData: props
-//     });  
-
-//     return (
-//         <div>
-        
-//         </div>
-//     )
-// }
-
 "use client";
 
 import React, { useCallback, useState } from "react";
-import { ErrorHistory, ErrorHistoryResponse } from "@/types/errorHistoryType";
-import { ApiResponseWrapper } from "@/types/apiType";
+import { ErrorHistory, ErrorHistoryQuery, ErrorHistoryResponse } from "@/types/errorHistoryType";
 import { useQuery } from "@tanstack/react-query";
 import { errorHistoryService } from "@/services/errorHistoryService";
 import Pagination from "../tables/Pagination";
@@ -49,7 +11,7 @@ import Button from "../ui/button/Button";
 import Select from "../form/Select";
 import { ChevronDownIcon } from "lucide-react";
 
-interface Props extends ApiResponseWrapper<ErrorHistoryResponse> {}
+interface Props extends ErrorHistoryResponse {}
 
 export default function DataErrorTable(props: Props) {
   const [page, setPage] = useState("1");
@@ -76,7 +38,7 @@ export default function DataErrorTable(props: Props) {
         parameter,
     ],
     queryFn: () => {
-        const payload: any = {
+        const payload: ErrorHistoryQuery = {
         page,
         limit,
         area ,
@@ -99,8 +61,8 @@ export default function DataErrorTable(props: Props) {
     placeholderData: props,
   });
 
-  const rows = data?.data?.data || [];
-  const meta = data?.data?.meta;
+  const rows = data?.data || [];
+  const meta = data?.meta;
 
   const handleStartChange = useCallback((selectedDates: Date[]) => {
     setStartDate(
@@ -118,6 +80,14 @@ export default function DataErrorTable(props: Props) {
     );
     }, []);
 
+    if(isError) {
+        return (
+            <div className="bg-red-100 text-red-700 p-2 rounded">
+            Terjadi kesalahan memuat data.
+            </div>
+        );
+    }
+
   return (
     <div className="mt-6 bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-500 rounded-xl p-4">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
@@ -126,7 +96,7 @@ export default function DataErrorTable(props: Props) {
             <div className="flex flex-wrap gap-3">
                 <Button
                     size="sm"     
-                    className={`px-4 py-2 rounded ${activeFilter === "period" ? "bg-emerald-600 text-white" : "bg-gray-300"} hover:bg-emerald-700`}
+                    className={`px-4 py-2 rounded ${activeFilter === "period" ? "bg-emerald-600 text-white" : "bg-gray-300 dark:bg-gray-700"} hover:bg-emerald-700`}
                     onClick={() => {
                         setActiveFilter("period");
                         setStartDate("");
@@ -139,7 +109,7 @@ export default function DataErrorTable(props: Props) {
 
                 <Button
                     size="sm"
-                    className={`px-4 py-2 rounded ${activeFilter === "date" ? "bg-blue-600 text-white" : "bg-gray-300"} hover:bg-blue-700`}
+                    className={`px-4 py-2 rounded ${activeFilter === "date" ? "bg-blue-600 text-white" : "bg-gray-300 dark:bg-gray-700"} hover:bg-blue-700`}
                     onClick={() => {
                         setActiveFilter("date");
                         setPeriod("monthly"); // reset tapi TIDAK DIKIRIM

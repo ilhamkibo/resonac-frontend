@@ -33,7 +33,8 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response.status === 401) {
+    // Tangani error jika diperlukan
+    if (error.response && error.response.status === 401) {
       // Jika token tidak valid, hapus cookie dan redirect ke halaman login
       Cookies.remove('accessToken');
       window.location.href = '/';

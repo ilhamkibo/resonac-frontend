@@ -11,7 +11,7 @@ export const errorHistoryService = {
   /**
    * Get history error dengan filter dan pagination
    */
-  async getErrorHistory(query: ErrorHistoryQuery): Promise<ApiResponseWrapper<ErrorHistoryResponse>> {
+  async getErrorHistory(query: ErrorHistoryQuery): Promise<ErrorHistoryResponse> {
     try {
       const params = new URLSearchParams();
 
@@ -34,7 +34,7 @@ export const errorHistoryService = {
         { params }
       );
 
-      return response.data;
+      return response.data.data;
     } catch (error) {
       console.error("Failed to fetch error history:", error);
       throw new Error("Failed to fetch error history. Please try again later.");
@@ -44,18 +44,15 @@ export const errorHistoryService = {
   /**
    * Get perbandingan weekly & monthly
    */
-  async getErrorHistoryCompare(): Promise<ApiResponseWrapper<ErrorHistoryCompare>> {
+  async getErrorHistoryCompare(): Promise<ErrorHistoryCompare | null>  {
     try {
       const response = await axiosInstance.get<ApiResponseWrapper<ErrorHistoryCompare>>(
         "/error-histories/compare"
       );
 
-      return response.data;
+      return response.data.data;
     } catch (error) {
-      console.error("Failed to fetch error compare stats:", error);
-      throw new Error(
-        "Failed to fetch error comparison data. Please try again later."
-      );
+      return null;
     }
   },
 };

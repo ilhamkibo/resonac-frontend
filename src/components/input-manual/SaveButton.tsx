@@ -28,8 +28,6 @@ export default function SaveButton({
     mutationFn: (vars: { data: RealtimeData; userId: number }) => 
         manualInputService.submitInput(vars.data, vars.userId), 
     onSuccess: () => {
-      const now = new Date().toLocaleString("id-ID");
-      const isoNow = new Date().toISOString();
       toast.success("Data berhasil disimpan!");
       
       setCapturedData(null);

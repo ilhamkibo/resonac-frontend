@@ -1,15 +1,4 @@
-export interface MeasurementData {
-  id: number;
-  timestamp: string;
-  area: string;
-  ampere_rs: number;
-  ampere_st: number;
-  ampere_tr: number;
-  volt_rs: number;
-  volt_st: number;
-  volt_tr: number;
-  pf: number;
-  kwh: number;
-  oil_pressure: number;
-  oil_temperature: number;
-}
+import { MeasurementDashboardSchema } from "@/validations/measurementSchema";
+import z from "zod";
+
+export type MeasurementDashboard = z.infer<typeof MeasurementDashboardSchema>;

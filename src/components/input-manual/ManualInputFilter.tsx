@@ -62,7 +62,7 @@ function ManualInputFilter({
         {/* FILTER BUTTONS */}
         <Button
           size="sm"
-          className={`px-4 py-2 rounded ${activeFilter === "period" ? "bg-emerald-600 text-white" : "bg-gray-300"} hover:bg-emerald-700 hover:text-white`}
+          className={`px-4 py-2 rounded ${activeFilter === "period" ? "bg-emerald-600 text-white" : "bg-gray-300 dark:bg-gray-700"} hover:bg-emerald-700 hover:text-white`}
           onClick={() => {
             setActiveFilter("period");
             setStartDate("");
@@ -75,7 +75,7 @@ function ManualInputFilter({
 
         <Button
           size="sm"
-          className={`px-4 py-2 rounded ${activeFilter === "date" ? "bg-blue-600 text-white" : "bg-gray-300"} hover:bg-blue-700 hover:text-white`}
+          className={`px-4 py-2 rounded ${activeFilter === "date" ? "bg-blue-600 text-white" : "bg-gray-300 dark:bg-gray-700"} hover:bg-blue-700 hover:text-white`}
           onClick={() => {
             setActiveFilter("date");
             setPeriod("monthly");

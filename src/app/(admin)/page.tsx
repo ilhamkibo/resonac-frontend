@@ -32,7 +32,7 @@ export default async function Page() {
 
   return (
     <div>
-      <div className="mt-4 shadow-sm bg-white dark:bg-gray-800 p-4 rounded-xl">
+      <div className="mt-4 shadow-sm bg-white dark:bg-gray-800 px-4 pt-2 rounded-xl">
         {/* ✅ 4. Lewatkan data awal sebagai props */}
         <OilTemperature
           initialMeasurements={initialOilData.measurements}

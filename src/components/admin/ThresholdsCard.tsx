@@ -3,7 +3,6 @@
 import { thresholdService } from "@/services/thresholdService";
 import {
   Threshold,
-  ThresholdResponse,
   UpdateThresholdInput,
 } from "@/types/thresholdType";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +20,7 @@ export default function ThresholdsCard() {
     isLoading,
     isError,
     error,
-  } = useQuery<ThresholdResponse, Error>({
+  } = useQuery<Threshold[], Error>({
     queryKey: ["thresholds"],
     queryFn: () => thresholdService.getAllThreshold(),
     staleTime: 1000 * 60,
@@ -93,9 +92,9 @@ export default function ThresholdsCard() {
 
       {isLoading && <div className="text-center p-5 text-gray-500 dark:text-gray-400">Loading thresholds...</div>}
       {isError && (
-        <div className="text-center p-5 text-red-500">
-            Error: {error.message}</div>
-        )}
+      <div className="text-center p-5 text-red-500">
+          Error: {error.message}</div>
+      )}
       {thresholds && (
         
         <table className="w-full mt-5">

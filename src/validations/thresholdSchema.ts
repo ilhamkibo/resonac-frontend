@@ -16,4 +16,3 @@ export const UpdateThresholdSchema = z.object({
     upperLimit: z.number().optional(),
 })
 
-export const ThresholdResponseSchema = z.array(ThresholdSchema);

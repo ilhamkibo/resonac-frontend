@@ -1,5 +1,6 @@
 import z from "zod";
 import { ThresholdSchema } from "./thresholdSchema";
+import { PaginationSchema } from "@/types/apiType";
 
 export const ErrorHistorySchema = z.object({
   id: z.number(),
@@ -13,12 +14,7 @@ export const ErrorHistorySchema = z.object({
 
 export const ErrorHistoryResponseSchema = z.object({
   data: z.array(ErrorHistorySchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    limit: z.number(),
-    totalPages: z.number(),
-  }),
+  meta: PaginationSchema
 });
 
 // ===== NEW SCHEMAS FOR COMPARISON =====
@@ -33,12 +29,12 @@ const ParameterCountSchema = z.object({
   count: z.number(),
 });
 
-const ParameterInAreaSchema = z.object({
+export const ParameterInAreaSchema = z.object({
   parameter: z.string().nullable(),
   count: z.number(),
 });
 
-const AreaParameterSchema = z.object({
+export const AreaParameterSchema = z.object({
   area: z.string().nullable(),
   total: z.number(),
   parameters: z.array(ParameterInAreaSchema),
