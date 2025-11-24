@@ -1,6 +1,6 @@
 import { axiosInstance } from "@/lib/api/axios";
 import { ApiResponseWrapper } from "@/types/apiType";
-import { ManualInputQuery, ManualInputResponse } from "@/types/manualInputType";
+import { ManualInputQuery, ManualInputQueryCsv, ManualInputResponse } from "@/types/manualInputType";
 import { RealtimeData } from "@/types/mqttType"; // Asumsi tipe data Anda
 
 // Fungsi untuk mengirim data manual
@@ -74,6 +74,35 @@ export const manualInputService = {
             console.error('Failed to fetch manual inputs:', error);
             throw new Error('Failed to fetch manual inputs. Please try again later.');
         }
-    }
+    },
 
+    async exportManualInputsCsv(query: ManualInputQueryCsv) {
+      try {
+        const queryString = new URLSearchParams(query as any).toString();
+        
+        // 1. PENTING: Konfigurasi Axios untuk mengharapkan respons dalam bentuk TEXT
+        const response = await axiosInstance.get(
+          `/manual-inputs/export?${queryString}`,
+          {
+            responseType: 'text', // <-- Ini memastikan respons tidak diparse sebagai JSON
+          }
+        );
+        
+        // 2. Kembalikan data mentah (yang kini berupa string CSV)
+        // Pastikan Anda memanggil endpoint '/export' atau '/export-csv' sesuai router Anda.
+        return response.data as string; 
+
+      } catch (error) {
+        console.error('Failed to export manual inputs:', error);
+        
+        const axiosError = error as any;
+
+        if (axiosError.response) {
+            // Error ini memiliki response dari server (ini adalah error Axios)
+          throw new Error(axiosError.response.data.message || 'Validation failed on server.');        
+        }
+
+        throw new Error('Failed to export manual inputs. Please try again later.');
+      }
+    }
 };

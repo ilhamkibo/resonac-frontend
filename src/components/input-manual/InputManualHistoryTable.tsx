@@ -1,11 +1,10 @@
 "use client";
 
+import { ManualInputTable } from "@/types/manualInputType";
 import Pagination from "../tables/Pagination";
-import { Row } from "./ManualInputDashboard";
-
 
 interface Props {
-  rows: Row[];
+  rows: ManualInputTable[];
   meta: {
     total: number;
     page: number;
@@ -15,7 +14,7 @@ interface Props {
   onPageChange: (page: number) => void;
 }
 
-export default function HistoryTable({ rows, meta, onPageChange }: Props) {
+export default function InputManualHistoryTable({ rows, meta, onPageChange }: Props) {
   if (!meta) return <div>Loading...</div>;
 
   return (

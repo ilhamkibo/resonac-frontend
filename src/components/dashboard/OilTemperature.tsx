@@ -21,6 +21,7 @@ type OilTemperatureProps = {
 export default function OilTemperature({ initialMeasurements, initialThresholds }: OilTemperatureProps) {
   // ====== HOOKS & STATE ======
   const mqttData = useMqttSubscription<{ realtime: RealtimeData }>("toho/resonac/value");
+  console.log("🚀 ~ OilTemperature ~ mqttData:", mqttData)
   const realtime = mqttData?.realtime;
 
   const MAX_POINTS = 50;

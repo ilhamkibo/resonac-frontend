@@ -1,32 +1,32 @@
+import { PaginationSchema } from "@/types/apiType";
 import { z } from "zod";
 
 export const MeasurementSchema = z.object({
-  bucket: z.string(),
-  area: z.string(),
-  ampere_rs_avg: z.number().nullable(),
-  ampere_rs_max: z.number().nullable(),
-  ampere_st_avg: z.number().nullable(),
-  ampere_st_max: z.number().nullable(),
-  ampere_tr_avg: z.number().nullable(),
-  ampere_tr_max: z.number().nullable(),
-  volt_rs_avg: z.number().nullable(),
-  volt_rs_max: z.number().nullable(),
-  volt_st_avg: z.number().nullable(),
-  volt_st_max: z.number().nullable(),
-  volt_tr_avg: z.number().nullable(),
-  volt_tr_max: z.number().nullable(),
-  oil_pressure_avg: z.number().nullable(),
-  oil_pressure_max: z.number().nullable(),
-  oil_temperature_avg: z.number().nullable(),
-  oil_temperature_max: z.number().nullable(),
-  pf_avg: z.number().nullable(),
-  pf_max: z.number().nullable(),
-  kwh_avg: z.number().nullable(),
-  kwh_max: z.number().nullable(),
+  timestamp: z.string().datetime(),
+  ampere_rs: z.number().optional(),
+  ampere_st: z.number().optional(),
+  ampere_tr: z.number().optional(),
+  volt_rs: z.number().optional(),
+  volt_st: z.number().optional(),
+  volt_tr: z.number().optional(),
+  pf: z.number().optional(),
+  kwh: z.number().optional(),
+  oil_pressure: z.number().optional(),
+  oil_temperature: z.number().optional(),
+})
+
+export const AggregatedDataSchema = z.record(
+  z.string(), // nama area: "main", "pilot", dll.
+  z.array(MeasurementSchema)
+);
+
+export const AggregatedDataResponseSchema = z.object({
+  meta: PaginationSchema,
+  data: AggregatedDataSchema,
 });
 
 export const MeasurementDashboardSchema = z.object({
-  id: z.number(),
+  id: z.number().optional(),
   timestamp: z.string().datetime(),
   area: z.string().nullable(),
   ampere_rs: z.number().nullable(),
@@ -39,6 +39,60 @@ export const MeasurementDashboardSchema = z.object({
   kwh: z.number().nullable(),
   oil_pressure: z.number().nullable(),
   oil_temperature: z.number().nullable(),
+});
+
+export const MeasurementAggregatedQuerySchema = z.object({
+  aggregationType: z.enum(['avg', 'max', 'min']).optional(),
+  period: z.enum(['hour', 'day', 'week', 'month']).optional(),
+  startDate: z
+    .string()
+    .optional(),
+  endDate: z
+    .string()
+    .optional(),
+  areas: z
+    .string()
+    // .transform((val) => val.split(","))
+    // .pipe(z.array(z.enum(["main", "pilot", "oil"])))
+    .optional(),
+  page: z.number().optional(),
+  limit: z.number().optional(),
+}).refine((data) => {
+  if(data.aggregationType) {
+    return (
+      (data.period && !data.startDate && !data.endDate) ||
+      (!data.period && data.startDate && data.endDate)
+    );
+  }
+  return true;
+},
+{
+  message: "When aggregation type is set, either period or start date and end date must be set",
+  path: ['period', 'startDate', 'endDate'],
 })
 
-export const measurementListSchema = z.array(MeasurementSchema);
+// z.object({
+//   bucket: z.string(),
+//   area: z.string(),
+//   ampere_rs_avg: z.number().nullable(),
+//   ampere_rs_max: z.number().nullable(),
+//   ampere_st_avg: z.number().nullable(),
+//   ampere_st_max: z.number().nullable(),
+//   ampere_tr_avg: z.number().nullable(),
+//   ampere_tr_max: z.number().nullable(),
+//   volt_rs_avg: z.number().nullable(),
+//   volt_rs_max: z.number().nullable(),
+//   volt_st_avg: z.number().nullable(),
+//   volt_st_max: z.number().nullable(),
+//   volt_tr_avg: z.number().nullable(),
+//   volt_tr_max: z.number().nullable(),
+//   oil_pressure_avg: z.number().nullable(),
+//   oil_pressure_max: z.number().nullable(),
+//   oil_temperature_avg: z.number().nullable(),
+//   oil_temperature_max: z.number().nullable(),
+//   pf_avg: z.number().nullable(),
+//   pf_max: z.number().nullable(),
+//   kwh_avg: z.number().nullable(),
+//   kwh_max: z.number().nullable(),
+// });
+

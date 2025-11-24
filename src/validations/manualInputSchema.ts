@@ -17,11 +17,34 @@ export const ManualInputDetailsSchema = z.object({
     oil_temperature: z.number().nullable(),
 })
 
+export const ManualInputTableSchema = z.object({
+    id: z.number(),
+    time: z.string().datetime(),
+    operator: z.string(),
+    oilPressMain: z.number().nullable(),
+    oilPressPilot: z.number().nullable(),
+    mainR: z.number().nullable(),
+    mainS: z.number().nullable(),
+    mainT: z.number().nullable(),
+    pilotR: z.number().nullable(),
+    pilotS: z.number().nullable(),
+    pilotT: z.number().nullable(),
+    oilTemp: z.number().nullable(),  
+});
+
 export const ManualInputSchema = z.object({
     id: z.number(),
     username: z.string(),
     timestamp: z.string().datetime(),
     details: z.array(ManualInputDetailsSchema),
+})
+
+export const ManualInputQueryCsvSchema = z.object({
+    period: z.enum(['daily', 'weekly', 'monthly']).optional(),
+    startDate: z.string().datetime().optional(),
+    endDate: z.string().datetime().optional(),
+    userId: z.number().optional(),
+    area: z.enum(['main', 'pilot', 'oil']).optional(),
 })
 
 export const ManualInputQuerySchema = z.object({

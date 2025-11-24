@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import HistoryTable from "./HistoryTable";
 import SaveButton from "./SaveButton";
 
 import { AmpereCardGroup } from "./AmpereCardGroup";
@@ -14,33 +13,18 @@ import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { manualInputService } from "@/services/manualInputService";
 
 import { ApiResponseWrapper } from "@/types/apiType";
-import { ManualInputResponse } from "@/types/manualInputType";
+import { ManualInput, ManualInputResponse, ManualInputTable } from "@/types/manualInputType";
 import { RealtimeData } from "@/types/mqttType";
 import ManualInputFilter from "./ManualInputFilter";
 import { Threshold } from "@/types/thresholdType";
+import InputManualHistoryTable from "./InputManualHistoryTable";
 
 interface DashboardProps {
   thresholds: Threshold[];
   initialManualInputs: ApiResponseWrapper<ManualInputResponse>;
 }
 
-export type Row = {
-  id: number | string;
-  time: string;
-  operator: string | number;
-  oilPressMain: number | null;
-  oilPressPilot: number | null;
-  mainR: number | null;
-  mainS: number | null;
-  mainT: number | null;
-  pilotR: number | null;
-  pilotS: number | null;
-  pilotT: number | null;
-  oilTemp: number | null;
-};
-
-
-const formatServerDataToRow = (input: any): Row => {
+const formatServerDataToRow = (input: ManualInput): ManualInputTable => {
   const mainPump = input.details.find((d: any) => d.area === "main");
   const pilotPump = input.details.find((d: any) => d.area === "pilot");
   const oil = input.details.find((d: any) => d.area === "oil");
@@ -75,23 +59,27 @@ export default function ManualInputDashboard({
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
+  // Memoize query params to pass to service
+  const queryParams = useMemo(() => ({
+    page,
+    limit,
+    // TIDAK MENGIRIM LIMIT DAN PAGE KE API EXPORT
+    ...(activeFilter === "period" ? { period } : {}),
+    ...(activeFilter === "date" && startDate && endDate
+      ? { startDate, endDate }
+      : {}),
+  }), [page, limit, activeFilter, period, startDate, endDate]);
 
   // Query manual inputs
-  const { data: manualInput } = useQuery({
-    queryKey: ["manual-inputs", page, period, startDate, endDate, limit],
+  const { data: manualInput, isFetching } = useQuery({
+    queryKey: ["manual-inputs", queryParams.page, queryParams.period, queryParams.startDate, queryParams.endDate, queryParams.limit],
     queryFn: () =>
-      manualInputService.getManualInputs({
-        page,
-        limit,
-        ...(activeFilter === "period" ? { period } : {}),
-        ...(activeFilter === "date" && startDate && endDate
-          ? { startDate, endDate }
-          : {}),
-      }),
+      manualInputService.getManualInputs(queryParams),
     placeholderData: initialManualInputs
   });
 
-  const rows: Row[] = useMemo(() => {
+  const rows: ManualInputTable[] = useMemo(() => {
     return manualInput?.data?.data
       ? manualInput.data.data.map(formatServerDataToRow)
       : [];
@@ -99,25 +87,50 @@ export default function ManualInputDashboard({
 
   const meta = manualInput?.data?.meta;
 
-  // Export CSV
-  const exportToCSV = () => {
-    if (!rows.length) return;
+  const exportToCSV = useCallback(async () => {
+    // 1. Dapatkan parameter filter (Hapus page dan limit)
+    const exportQuery = {
+        ...(activeFilter === "period" ? { period } : {}),
+        ...(activeFilter === "date" && startDate && endDate
+          ? { startDate, endDate }
+          : {}),
+        // Tidak perlu limit dan page di sini karena service API akan mengambil semua
+    };
 
-    const header = Object.keys(rows[0]).join(",");
-    const values = rows
-      .map((r) =>
-        Object.values(r)
-          .map((v) => `"${v ?? ""}"`)
-          .join(",")
-      )
-      .join("\n");
+    setIsExporting(true);
 
-    const blob = new Blob([header + "\n" + values], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "manual-input-history.csv";
-    link.click();
-  };
+    try {
+      // 2. Panggil service API Export yang mengembalikan string CSV
+      // Asumsi: manualInputService.exportManualInputsCsv sudah diimplementasikan
+      const csvString = await manualInputService.exportManualInputsCsv(exportQuery);
+
+      // 3. Buat dan unduh file
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      
+      // Cek browser support
+      if (link.download !== undefined) { 
+          const url = URL.createObjectURL(blob);
+          link.setAttribute("href", url);
+          link.setAttribute("download", `manual-input-history-${new Date().toLocaleString("id-ID")}.csv`);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url); // Bersihkan URL object
+      } else {
+          // Fallback for older browsers
+          window.open(`data:text/csv;charset=utf-8,${encodeURIComponent(csvString)}`);
+      }
+    } catch (error) {
+      console.error("CSV Export Failed:", error);
+      alert("Gagal mengunduh CSV. Silakan coba lagi.");
+    } finally {
+      // ⭐ 3. SET LOADING FALSE di blok finally (akan selalu dipanggil)
+      setIsExporting(false); 
+    }
+  }, [activeFilter, period, startDate, endDate]);
+  // -------------------------------------------------------------
 
   const lastManualInput = rows[0];
 
@@ -192,6 +205,7 @@ export default function ManualInputDashboard({
 
       {/* Filters */}
       <ManualInputFilter
+        isExporting={isExporting} // <-- BARU
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         period={period}
@@ -207,7 +221,7 @@ export default function ManualInputDashboard({
 
       {/* Table */}
       <div className="mt-6">
-        <HistoryTable
+        <InputManualHistoryTable
           rows={rows}
           meta={meta}
           onPageChange={setPage}

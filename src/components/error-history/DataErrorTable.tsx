@@ -25,52 +25,96 @@ export default function DataErrorTable(props: Props) {
 
     const [activeFilter, setActiveFilter] = useState<"period" | "date" | null>("period");
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: [
-        "error-history",
-        page,
-        limit,
-        activeFilter,
-        period,
-        startDate,
-        endDate,
-        area,
-        parameter,
-    ],
-    queryFn: () => {
-        const payload: ErrorHistoryQuery = {
-        page,
-        limit,
-        area ,
-        parameter,
-        };
+    const { data, isLoading, isError } = useQuery({
+        queryKey: [
+            "error-history",
+            page,
+            limit,
+            activeFilter,
+            period,
+            startDate,
+            endDate,
+            area,
+            parameter,
+        ],
+        queryFn: () => {
+            const payload: ErrorHistoryQuery = {
+            page,
+            limit,
+            area: area === "all" ? undefined : area,
+            parameter: parameter === "all" ? undefined : parameter,
+            };
 
-        if (activeFilter === "period") {
-            payload.period = period; // hanya period
-        }
+            if (activeFilter === "period") {
+                payload.period = period; // hanya period
+            }
 
-        if (activeFilter === "date" && startDate && endDate) {
-            payload.startDate = startDate;
-            payload.endDate = endDate; // hanya date
-        }
-        if (area === "all") delete payload.area 
-        if (parameter === "all") delete payload.parameter 
+            if (activeFilter === "date" && startDate && endDate) {
+                payload.startDate = startDate;
+                payload.endDate = endDate; // hanya date
+            }
 
-        return errorHistoryService.getErrorHistory(payload);
-    },
-    placeholderData: props,
-  });
+            return errorHistoryService.getErrorHistory(payload);
+        },
+        placeholderData: props,
+    });
 
-  const rows = data?.data || [];
-  const meta = data?.meta;
+    const rows = data?.data || [];
+    const meta = data?.meta;
 
-  const handleStartChange = useCallback((selectedDates: Date[]) => {
+    const handleStartChange = useCallback((selectedDates: Date[]) => {
     setStartDate(
         selectedDates[0]
         ? flatpickr.formatDate(selectedDates[0], "Y-m-d")
         : ""
     );
     }, []);
+
+    const [isExporting, setIsExporting] = useState(false);
+
+    const exportToCSV = useCallback(async () => {
+        // 1. Dapatkan parameter filter (Hapus page dan limit)
+        const exportQuery = {
+            area: area === "all" ? undefined : area,
+            parameter: parameter === "all" ? undefined : parameter,
+            ...(activeFilter === "period" ? { period } : {}),
+            ...(activeFilter === "date" && startDate && endDate
+                ? { startDate, endDate }
+                : {}),
+            // Tidak perlu limit dan page di sini karena service API akan mengambil semua
+        };
+
+        setIsExporting(true);
+
+        try {
+            const csvString = await errorHistoryService.exportErrorHistory(exportQuery);
+
+            // 3. Buat dan unduh file
+            const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            
+            // Cek browser support
+            if (link.download !== undefined) { 
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `error-history-${new Date().toLocaleString("id-ID")}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url); // Bersihkan URL object
+            } else {
+                // Fallback for older browsers
+                window.open(`data:text/csv;charset=utf-8,${encodeURIComponent(csvString)}`);
+            }
+        } catch (error) {
+            console.error("CSV Export Failed:", error);
+            alert("Gagal mengunduh CSV. Silakan coba lagi.");
+        } finally {
+            // ⭐ 3. SET LOADING FALSE di blok finally (akan selalu dipanggil)
+            setIsExporting(false); 
+        }
+    }, [activeFilter, period, startDate, endDate]);
 
     const handleEndChange = useCallback((selectedDates: Date[]) => {
     setEndDate(
@@ -218,7 +262,6 @@ export default function DataErrorTable(props: Props) {
             <table className="min-w-full text-left text-sm">
             <thead className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 uppercase text-xs">
                 <tr>
-                <th className="px-4 py-3">ID</th>
                 <th className="px-4 py-3">Area</th>
                 <th className="px-4 py-3">Parameter</th>
                 <th className="px-4 py-3">Timestamp</th>
@@ -255,10 +298,9 @@ export default function DataErrorTable(props: Props) {
                 {!isLoading &&
                 rows.map((item: ErrorHistory) => (
                     <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-3 dark:text-gray-400">{item.id}</td>
+                    <td className="px-4 py-3 dark:text-gray-400">{new Date(item.timestamp).toLocaleString("id-ID")}</td>
                     <td className="px-4 py-3 dark:text-gray-400">{item.area}</td>
                     <td className="px-4 py-3 dark:text-gray-400">{item.parameter}</td>
-                    <td className="px-4 py-3 dark:text-gray-400">{item.timestamp}</td>
                     <td className="px-4 py-3 dark:text-gray-400">Min: {item.threshold.lowerLimit} | Max: {item.threshold.upperLimit}</td>
                     <td className="px-4 py-3 dark:text-gray-400">{item.value}</td>
                     <td className="px-4 py-3 dark:text-gray-400">{item.status}</td>

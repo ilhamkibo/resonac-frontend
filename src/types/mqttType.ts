@@ -76,8 +76,12 @@ export type NotificationData = {
   time?: string;
 };
 
+export interface ManualInputError extends AlertPayload {
+  shift: string;
+}
+
 export interface AlertPayload {
-  topic: string;
+  topic?: string;
   message: string;
   status?: string;
   timestamp?: string;

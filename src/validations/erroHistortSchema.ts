@@ -65,3 +65,11 @@ export const ErrorHistoryQuerySchema = z.object({
   area: z.string().optional(),
   parameter: z.string().optional(),
 });
+
+export const ErrorHistoryTableQuerySchema = z.object({
+  period: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  area: z.string().optional(),
+  parameter: z.string().optional(),
+});

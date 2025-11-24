@@ -42,8 +42,6 @@ export default function DailyInfo() {
 
   // 🔁 Auto reconnect kalau Disconnected/Error
   useEffect(() => {
-    console.log("MQTT Status:", status);
-
     if (status === "Disconnected" || status === "Error") {
       if (!reconnectTimer.current) {
         console.log(`MQTT ${status}. Auto reconnect dalam 5 detik...`);
