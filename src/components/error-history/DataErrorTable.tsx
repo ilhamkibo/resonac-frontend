@@ -14,6 +14,7 @@ import { ChevronDownIcon } from "lucide-react";
 interface Props extends ErrorHistoryResponse {}
 
 export default function DataErrorTable(props: Props) {
+
   const [page, setPage] = useState("1");
   const [limit, setLimit] = useState("10");
 
@@ -83,6 +84,7 @@ export default function DataErrorTable(props: Props) {
                 : {}),
             // Tidak perlu limit dan page di sini karena service API akan mengambil semua
         };
+        console.log("🚀 ~ DataErrorTable ~ exportQuery:", exportQuery)
 
         setIsExporting(true);
 
@@ -97,7 +99,7 @@ export default function DataErrorTable(props: Props) {
             if (link.download !== undefined) { 
                 const url = URL.createObjectURL(blob);
                 link.setAttribute("href", url);
-                link.setAttribute("download", `error-history-${new Date().toLocaleString("id-ID")}.csv`);
+                link.setAttribute("download", `error-histories-${new Date().toLocaleString("id-ID")}.csv`);
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
@@ -114,7 +116,7 @@ export default function DataErrorTable(props: Props) {
             // ⭐ 3. SET LOADING FALSE di blok finally (akan selalu dipanggil)
             setIsExporting(false); 
         }
-    }, [activeFilter, period, startDate, endDate]);
+    }, [activeFilter, period, startDate, endDate, area, parameter]);
 
     const handleEndChange = useCallback((selectedDates: Date[]) => {
     setEndDate(
@@ -237,23 +239,45 @@ export default function DataErrorTable(props: Props) {
             </div>
 
             {/* LIMIT RIGHT */}
-            <div className="relative">
-                <Select
-                    options={[
-                        { value: "5", label: "5 Rows" },
-                        { value: "10", label: "10 Rows" },
-                        { value: "25", label: "25 Rows" },
-                        { value: "50", label: "50 Rows" },
-                    ]}
-                    defaultValue={limit}
-                    onChange={(e) => {
-                        setPage("1");
-                        setLimit(e);
-                    }}
-                />
-                <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                    <ChevronDownIcon/>
-                </span>
+            <div className="flex gap-4">
+                <div className="relative">
+                    <Select
+                        options={[
+                            { value: "5", label: "5 Rows" },
+                            { value: "10", label: "10 Rows" },
+                            { value: "25", label: "25 Rows" },
+                            { value: "50", label: "50 Rows" },
+                        ]}
+                        defaultValue={limit}
+                        onChange={(e) => {
+                            setPage("1");
+                            setLimit(e);
+                        }}
+                    />
+                    <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
+                        <ChevronDownIcon/>
+                    </span>
+                </div>
+                <Button
+                    size="sm"
+                    className="px-4 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700"
+                    onClick={exportToCSV}
+                    disabled={isExporting} // <-- NONAKTIFKAN saat loading
+                >
+                    {/* ⭐ 5. TAMPILKAN SPINNER SAAT LOADING */}
+                    {isExporting ? (
+                        <div className="flex items-center">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Exporting...
+                        </div>
+                    ) : (
+                        "Export CSV" 
+                    )}
+                </Button>
+                
             </div>
         </div>
 
@@ -262,9 +286,9 @@ export default function DataErrorTable(props: Props) {
             <table className="min-w-full text-left text-sm">
             <thead className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 uppercase text-xs">
                 <tr>
+                <th className="px-4 py-3">Timestamp</th>
                 <th className="px-4 py-3">Area</th>
                 <th className="px-4 py-3">Parameter</th>
-                <th className="px-4 py-3">Timestamp</th>
                 <th className="px-4 py-3">Threshold</th>
                 <th className="px-4 py-3">Value</th>
                 <th className="px-4 py-3">Status</th>

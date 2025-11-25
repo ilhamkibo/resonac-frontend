@@ -4,7 +4,7 @@ import {
   ErrorHistoryResponse,
   ErrorHistoryCompare,
   ErrorHistoryQuery,
-  ErrorHistoryTableQuery,
+  ErrorHistoryCsvQuery,
 } from "@/types/errorHistoryType";
 
 
@@ -57,9 +57,13 @@ export const errorHistoryService = {
     }
   },
 
-  async exportErrorHistory(query: ErrorHistoryTableQuery) {
+  async exportErrorHistory(query: ErrorHistoryCsvQuery) {
     try {
-      const queryString = new URLSearchParams(query as any).toString();
+      const cleanedQuery = Object.fromEntries(
+        Object.entries(query).filter(([_, v]) => v !== undefined && v !== "")
+      );
+
+      const queryString = new URLSearchParams(cleanedQuery).toString();
       
       // 1. PENTING: Konfigurasi Axios untuk mengharapkan respons dalam bentuk TEXT
       const response = await axiosInstance.get(

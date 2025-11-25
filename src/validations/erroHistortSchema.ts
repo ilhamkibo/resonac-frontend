@@ -66,7 +66,7 @@ export const ErrorHistoryQuerySchema = z.object({
   parameter: z.string().optional(),
 });
 
-export const ErrorHistoryTableQuerySchema = z.object({
+export const ErrorHistoryCsvQuerySchema = z.object({
   period: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
