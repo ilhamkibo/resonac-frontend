@@ -7,10 +7,11 @@ import { RealtimeData } from "@/types/mqttType"; // Asumsi tipe data Anda
 interface ApiManualInputPayload {
   userId: number; // Sesuaikan tipenya jika user.id bukan number
   timestamp: string;
-  details: any[];
+  // details: any[];
+  details: Array<Record<string, unknown>>; // ⬅ aman, bukan any
 }
 
-const cleanParams = (params: Record<string, any>) => {
+const cleanParams = (params: Record<string, unknown>) => {
   const cleaned: Record<string, string> = {};
   for (const key in params) {
     const value = params[key];
@@ -77,32 +78,19 @@ export const manualInputService = {
     },
 
     async exportManualInputsCsv(query: ManualInputQueryCsv) {
-      try {
-        const queryString = new URLSearchParams(query as any).toString();
+      const cleaned = cleanParams(query);
+      const queryString = new URLSearchParams(cleaned).toString();
         
-        // 1. PENTING: Konfigurasi Axios untuk mengharapkan respons dalam bentuk TEXT
-        const response = await axiosInstance.get(
-          `/manual-inputs/export?${queryString}`,
-          {
-            responseType: 'text', // <-- Ini memastikan respons tidak diparse sebagai JSON
-          }
-        );
-        
-        // 2. Kembalikan data mentah (yang kini berupa string CSV)
-        // Pastikan Anda memanggil endpoint '/export' atau '/export-csv' sesuai router Anda.
-        return response.data as string; 
-
-      } catch (error) {
-        console.error('Failed to export manual inputs:', error);
-        
-        const axiosError = error as any;
-
-        if (axiosError.response) {
-            // Error ini memiliki response dari server (ini adalah error Axios)
-          throw new Error(axiosError.response.data.message || 'Validation failed on server.');        
+      // 1. PENTING: Konfigurasi Axios untuk mengharapkan respons dalam bentuk TEXT
+      const response = await axiosInstance.get(
+        `/manual-inputs/export?${queryString}`,
+        {
+          responseType: "blob",
         }
-
-        throw new Error('Failed to export manual inputs. Please try again later.');
-      }
+      );
+      
+      // 2. Kembalikan data mentah (yang kini berupa string CSV)
+      // Pastikan Anda memanggil endpoint '/export' atau '/export-csv' sesuai router Anda.
+      return response.data; 
     }
 };

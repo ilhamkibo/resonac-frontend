@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"; // ✅ 1. Impor
 import { zodResolver } from "@hookform/resolvers/zod"; // ✅ 2. Impor
 import { useMutation } from "@tanstack/react-query"; // ✅ 3. Impor
 import { toast } from "sonner"; // ✅ 4. Impor
+import { AxiosError } from "axios";
 
 import { useAuthModal } from "@/context/AuthModalContext";
 import { authService } from "@/services/authService"; // ✅ 5. Impor
@@ -44,8 +45,8 @@ export default function SignUpForm() {
       // Beralih kembali ke tampilan Sign In
       setView('signIn'); 
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Login gagal. Periksa kembali data Anda.";
+  onError: (error: AxiosError<{ message?: string }>) => {
+      const message = error.response?.data?.message || "Registrasi gagal. Periksa kembali data Anda.";
       toast.error(message);
     },
   });

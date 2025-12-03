@@ -5,6 +5,9 @@ import { thresholdService } from "@/services/thresholdService";
 import Link from "next/link";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function Page() {
   const thresholds = await thresholdService.getAllThreshold();
   const historyInputManualData = await manualInputService.getManualInputs({

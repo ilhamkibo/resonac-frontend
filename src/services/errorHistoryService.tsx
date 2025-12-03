@@ -7,6 +7,7 @@ import {
   ErrorHistoryCsvQuery,
 } from "@/types/errorHistoryType";
 
+import { isAxiosError } from "axios";
 
 export const errorHistoryService = {
   /**
@@ -53,6 +54,7 @@ export const errorHistoryService = {
 
       return response.data.data;
     } catch (error) {
+      console.warn(error)
       return null;
     }
   },
@@ -60,7 +62,7 @@ export const errorHistoryService = {
   async exportErrorHistory(query: ErrorHistoryCsvQuery) {
     try {
       const cleanedQuery = Object.fromEntries(
-        Object.entries(query).filter(([_, v]) => v !== undefined && v !== "")
+        Object.entries(query).filter(([, v]) => v !== undefined && v !== "")
       );
 
       const queryString = new URLSearchParams(cleanedQuery).toString();
@@ -76,14 +78,13 @@ export const errorHistoryService = {
       // 2. Kembalikan data mentah (yang kini berupa string CSV)
       // Pastikan Anda memanggil endpoint '/export' atau '/export-csv' sesuai router Anda.
       return response.data as string; 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to export manual inputs:', error);
       
-      const axiosError = error as any;
 
-      if (axiosError.response) {
-          // Error ini memiliki response dari server (ini adalah error Axios)
-        throw new Error(axiosError.response.data.message || 'Validation failed on server.');        
+      if (isAxiosError(error) && error.response) {
+        // Error ini memiliki response dari server (ini adalah error Axios)
+        throw new Error(error.response.data.message || "Validation failed on server.");
       }
 
       throw new Error('Failed to export manual inputs. Please try again later.');

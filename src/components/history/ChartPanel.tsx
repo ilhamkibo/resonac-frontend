@@ -8,9 +8,10 @@ interface ChartPanelProps {
     series: { name: string; data: (number | null)[] }[];
     timestamps: string[];
     isLoading: boolean;
+    isError: boolean;
 }
 
-export default function ChartPanel({ series, timestamps, isLoading }: ChartPanelProps) {
+export default function ChartPanel({ series, timestamps, isLoading, isError }: ChartPanelProps) {
     const options: ApexOptions = {
         chart: { type: "line", toolbar: { show: true } },
         stroke: { curve: "smooth", width: 3 },
@@ -25,7 +26,7 @@ export default function ChartPanel({ series, timestamps, isLoading }: ChartPanel
 
             {isLoading && <div>Loading Chart Data...</div>}
 
-            {!isLoading && series[0]?.data.length > 0 ? (
+            {!isError && !isLoading && series[0]?.data.length > 0 ? (
                 <ReactApexChart
                     type="line"
                     height={320}
@@ -35,6 +36,8 @@ export default function ChartPanel({ series, timestamps, isLoading }: ChartPanel
             ) : (
                 !isLoading && <div className="p-4 text-sm text-gray-500">No data to display</div>
             )}
+
+            {isError && <div className="p-4 text-sm text-red-500">Error loading chart data</div>}
         </div>
     );
 }

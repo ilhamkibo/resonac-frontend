@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
 // Daftar rute
-const publicRoutes = ['/signin', '/signup'];
+// const publicRoutes = ['/signin', '/signup'];
 const protectedRoutes = [ '/admin'];
 
 const getJwtSecretKey = () => {
@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
     try {
       await jwtVerify(token, getJwtSecretKey());
       return NextResponse.next();
-    } catch (error) {
+    } catch {
       const response = NextResponse.redirect(new URL('/', request.url));
       response.cookies.delete('accessToken');
       return response;
@@ -36,19 +36,19 @@ export async function middleware(request: NextRequest) {
   }
 
   // Logika untuk pengguna yang sudah login tapi mencoba akses halaman signin/signup
-  if (token && publicRoutes.some(p => pathname.startsWith(p))) {
-    try {
-      // Cek apakah tokennya masih valid sebelum redirect
-      await jwtVerify(token, getJwtSecretKey());
-      return NextResponse.redirect(new URL('/', request.url));
-    } catch (error) {
-      // Jika token tidak valid, biarkan saja di halaman login
-      // dan hapus cookie yang salah
-      const response = NextResponse.next();
-      response.cookies.delete('accessToken');
-      return response;
-    }
-  }
+  // if (token && publicRoutes.some(p => pathname.startsWith(p))) {
+  //   try {
+  //     // Cek apakah tokennya masih valid sebelum redirect
+  //     await jwtVerify(token, getJwtSecretKey());
+  //     return NextResponse.redirect(new URL('/', request.url));
+  //   } catch {
+  //     // Jika token tidak valid, biarkan saja di halaman login
+  //     // dan hapus cookie yang salah
+  //      const response = NextResponse.next();
+  //     response.cookies.delete('accessToken');
+  //     return response;
+  //   }
+  // }
 
   return NextResponse.next();
 }

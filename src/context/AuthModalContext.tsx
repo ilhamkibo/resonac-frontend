@@ -27,10 +27,10 @@ export const AuthModalProvider = ({ children }: { children: React.ReactNode }) =
   return (
     <AuthModalContext.Provider value={{ 
       isOpen, 
-        view,     // ✅ 7. Berikan 'view'
-        openModal, 
-        closeModal, 
-        setView   // ✅ 8. Berikan 'setView'
+      view,     // ✅ 7. Berikan 'view'
+      openModal, 
+      closeModal, 
+      setView   // ✅ 8. Berikan 'setView'
      }}>
       {children}
     </AuthModalContext.Provider>

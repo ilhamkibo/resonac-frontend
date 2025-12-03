@@ -31,14 +31,16 @@ axiosInstance.interceptors.request.use(
 
 // ✅ Buat Interceptor
 axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // Tangani error jika diperlukan
-    if (error.response && error.response.status === 401) {
-      // Jika token tidak valid, hapus cookie dan redirect ke halaman login
-      Cookies.remove('accessToken');
-      window.location.href = '/';
-    }
-    return Promise.reject(error);
+ (response) => response,
+ (error) => {
+  if (error.response && error.response.status === 401) {
+   // 1. Hapus token (Tugas interseptor)
+   Cookies.remove('accessToken');
+
+   // 2. Lemparkan Error seperti biasa. 
+      //    JANGAN lakukan redirect di sini.
+   return Promise.reject(error);
   }
+  return Promise.reject(error);
+ }
 );

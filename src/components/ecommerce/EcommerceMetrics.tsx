@@ -1,10 +1,7 @@
 "use client";
 import React from "react";
-import Badge from "../ui/badge/Badge";
-import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon } from "@/icons";
 import ReactApexChart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-import { useMqtt } from "@/hooks/useMqtt";
 
 export const EcommerceMetrics = () => {
    const series = [75.55];
@@ -56,8 +53,6 @@ export const EcommerceMetrics = () => {
       labels: ["Progress"],
     };
 
-    const message = useMqtt("value");
-    console.log("message", message);
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       <ReactApexChart options={options} series={series} type="radialBar" />

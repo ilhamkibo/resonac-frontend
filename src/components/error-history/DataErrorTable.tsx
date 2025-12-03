@@ -11,12 +11,10 @@ import Button from "../ui/button/Button";
 import Select from "../form/Select";
 import { ChevronDownIcon } from "lucide-react";
 
-interface Props extends ErrorHistoryResponse {}
-
-export default function DataErrorTable(props: Props) {
+export default function DataErrorTable(props: ErrorHistoryResponse) {
 
   const [page, setPage] = useState("1");
-  const [limit, setLimit] = useState("10");
+  const [limit, setLimit] = useState("100");
 
     const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
     const [startDate, setStartDate] = useState<string>("");
@@ -84,7 +82,6 @@ export default function DataErrorTable(props: Props) {
                 : {}),
             // Tidak perlu limit dan page di sini karena service API akan mengambil semua
         };
-        console.log("🚀 ~ DataErrorTable ~ exportQuery:", exportQuery)
 
         setIsExporting(true);
 
@@ -243,10 +240,10 @@ export default function DataErrorTable(props: Props) {
                 <div className="relative">
                     <Select
                         options={[
-                            { value: "5", label: "5 Rows" },
-                            { value: "10", label: "10 Rows" },
-                            { value: "25", label: "25 Rows" },
+                            { value: "20", label: "20 Rows" },
                             { value: "50", label: "50 Rows" },
+                            { value: "100", label: "100 Rows" },
+                            { value: "200", label: "200 Rows" },
                         ]}
                         defaultValue={limit}
                         onChange={(e) => {

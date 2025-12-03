@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
 import { NotificationData } from "@/types/mqttType";
 import { useMqtt } from "@/context/MqttContext";
+import Image from "next/image";
 
 export default function DailyInfo() {
   const [dateTime, setDateTime] = useState(new Date());
@@ -106,10 +107,18 @@ export default function DailyInfo() {
     <div className="grid grid-cols-2 xl:grid-cols-3 items-center text-gray-600 dark:text-gray-200 text-center md:text-2xl text-lg">
       {/* 🏢 Logo */}
       <div className="text-left">
-        <img
+        {/* <img
           src="/images/brand/resonac-clean.png"
           alt="logo"
           className="w-60 -ml-8"
+        /> */}
+        <Image
+          src="/images/brand/resonac-clean.png"
+          alt="Resonac Logo"
+          width={240}
+          height={80}
+          className="-ml-8 w-60"
+          priority    // bagus jika ditampilkan di atas halaman
         />
       </div>
 

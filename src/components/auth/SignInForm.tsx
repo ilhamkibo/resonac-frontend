@@ -1,15 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Cookies from 'js-cookie'; // ✅ 1. Impor js-cookie
 
 import { useAuthModal } from "@/context/AuthModalContext";
+import { AxiosError } from "axios";
 
 // ✅ 1. Pastikan path dan nama impor sesuai dengan file validasi Anda
 import { LoginPayload, authSchema } from "@/validations/authSchema"; 
@@ -25,9 +24,8 @@ import { EyeCloseIcon, EyeIcon } from "@/icons";
 
 export default function SignInForm() {
   const { setView } = useAuthModal();  
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // ✅ 2. Setup React Hook Form & Zod Resolver (Sudah benar)
   const {
     register,
@@ -43,35 +41,32 @@ export default function SignInForm() {
   });
 
   // ✅ 3. Setup React Query Mutation untuk handle API call
-  const mutation = useMutation({
-    mutationFn: authService.login, // Langsung gunakan fungsi dari service
-    onSuccess: (response) => {
-      const { token } = response.data.data;
-      if (!token) {
-        toast.error("Login berhasil, tetapi token tidak diterima.");
-        return;
-      }
+    const mutation = useMutation({
+      mutationFn: authService.login, // Langsung gunakan fungsi dari service
+      onSuccess: (response) => {
+        const { token } = response.data.data;
+        if (!token) {
+          toast.error("Login berhasil, tetapi token tidak diterima.");
+          return;
+        }
+        // ✅ 3. Simpan token secara manual di cookie
+        Cookies.set('accessToken', token, { 
+          expires: 1, // Cookie berlaku selama 1 hari
+          path: '/',
+          httpOnly: false,
+          secure: false, // Hanya via HTTPS di produksi
+          sameSite: 'lax' // 'lax' adalah pilihan yang baik
+        });
 
-      // ✅ 3. Simpan token secara manual di cookie
-      Cookies.set('accessToken', token, { 
-        expires: 1, // Cookie berlaku selama 1 hari
-        path: '/',
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production', // Hanya via HTTPS di produksi
-        sameSite: 'lax' // 'lax' adalah pilihan yang baik
-      });
-
-      toast.success("Login berhasil!");
-      // router.push("/"); // Ganti dengan path dashboard Anda, misal: "/dashboard"
-      window.location.reload();
-      router.refresh(); // Memastikan server-side components di-refresh jika perlu
-    },
-    onError: (error: any) => {
-      // Baris ini tidak lagi wajib jika Anda sudah punya error handler global di queryClient
-      const message = error.response?.data?.message || "Login gagal. Periksa kembali data Anda.";
-      toast.error(message);
-    },
-  });
+        toast.success("Login berhasil!");
+        // router.push("/"); // Ganti dengan path dashboard Anda, misal: "/dashboard"
+        window.location.reload();
+      },
+      onError: (error: AxiosError<{ message?: string }>) => {
+        const message = error.response?.data?.message || "Login gagal. Periksa kembali data Anda.";
+        toast.error(message);
+      },
+    });
 
   // Fungsi yang dipanggil saat form di-submit dan valid
   const onSubmit = (data: LoginPayload) => {
@@ -80,16 +75,6 @@ export default function SignInForm() {
 
   return (
     <div className="flex flex-col flex-1 w-full">
-      {/* ... bagian header (Back to dashboard) ... */}
-      {/* <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon />
-          Back to dashboard
-        </Link>
-      </div> */}
 
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
@@ -111,8 +96,8 @@ export default function SignInForm() {
                   </Label>
                   <Input
                     placeholder="youremail@example.com"
-                    type="text" // ✅ Ganti type menjadi "text" agar bisa diisi username
-                    {...register("email")} // ✅ WAJIB: Ganti "email" menjadi "identifier"
+                    type="text" 
+                    {...register("email")} 
                   />
                   {/* ✅ Tampilkan error untuk field "identifier" */}
                   {errors.email && (
@@ -143,25 +128,6 @@ export default function SignInForm() {
                     <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
                   )}
                 </div>
-
-               {/* <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Controller
-                      name="rememberMe"
-                      control={control}
-                      render={({ field }) => (
-                        <Checkbox
-                            // field.value is now guaranteed to be a boolean
-                            checked={field.value}
-                            onChange={field.onChange}
-                        />
-                      )}
-                  />
-                  <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
-                    Keep me logged in
-                  </span>
-                </div>
-              </div> */}
 
                 <div>
                   <Button

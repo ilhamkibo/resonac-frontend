@@ -4,7 +4,7 @@ import { LoginPayload, RegisterPayload } from '@/validations/authSchema';
 export const authService = {
   // Mengirim kredensial, server akan membalas dengan Set-Cookie header
   async login(payload: LoginPayload) {
-    const response = axiosInstance.post('/auth/login', payload);
+    const response = await axiosInstance.post('/auth/login', payload);
     // Mungkin berisi data user, tapi token sudah di-set oleh server di cookie
     return response;
   },
@@ -16,7 +16,7 @@ export const authService = {
   },
 
   async register(payload: RegisterPayload) {
-    const response = axiosInstance.post('/auth/register', payload);
+    const response = await axiosInstance.post('/auth/register', payload);
     // Mungkin berisi data user, tapi token sudah di-set oleh server di cookie
     return response;
   },

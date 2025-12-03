@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, keepPreviousData, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '@/services/userService';
-import { UserQuery, UserResponse, UserStats } from '@/types/userType';
+import { UpdateUserInput, User, UserQuery, UserResponse, UserStats } from '@/types/userType';
 import { toast } from 'sonner';
 import { useModal } from '@/hooks/useModal';
 import { Modal } from '../ui/modal';
@@ -24,7 +24,7 @@ export default function UsersCard() {
   const [userToDelete, setUserToDelete] = useState<string | number | null>(null);
   const [userNameToDelete, setUserNameToDelete] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | number | null>(null); // 🆕 user yang sedang di-edit
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<UpdateUserInput>({
     email: '',
     name: '',
     isApproved: false,
@@ -84,7 +84,7 @@ export default function UsersCard() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string | number; data: any }) => userService.updateUser(id, data),
+    mutationFn: ({ id, data }: { id: string | number; data: UpdateUserInput }) => userService.updateUser(id, data),
     onSuccess: () => {
       toast.success("User updated successfully.");
       setEditingUserId(null);
@@ -96,14 +96,14 @@ export default function UsersCard() {
     },
   });
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setQuery(prev => ({
-      ...prev,
-      [name]: value || undefined,
-      page: '1',
-    }));
-  };
+  // const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const { name, value } = e.target;
+  //   setQuery(prev => ({
+  //     ...prev,
+  //     [name]: value || undefined,
+  //     page: '1',
+  //   }));
+  // };
 
   const handleDeleteUser = (id: number | string, name: string) => {
     setUserToDelete(id);
@@ -116,13 +116,13 @@ export default function UsersCard() {
   };
 
   // 🆕 Saat klik Edit
-  const handleEditUser = (user: any) => {
+  const handleEditUser = (user: User) => {
     setEditingUserId(user.id);
     setEditForm({
       email: user.email,
       name: user.name,
       isApproved: user.isApproved,
-      role: user.role,
+      role: user.role === "admin" || user.role === "operator" ? user.role : "operator",
     });
   };
 
@@ -226,7 +226,7 @@ export default function UsersCard() {
               </thead>
               <tbody>
                 {users.length > 0 ? (
-                  users.map((user, index) => (
+                  users.filter((user) => user.name !== "ilham").map((user, index) => (
                     <tr key={user.id} className={index % 2 === 0 ? "bg-white dark:bg-gray-800" : "dark:bg-gray-700 bg-gray-100"}>
                       {editingUserId === user.id ? (
                         <>
@@ -279,7 +279,7 @@ export default function UsersCard() {
                             </select>
                           </td> */}
                           <td
-                            onKeyDown={(e: any) => {
+                              onKeyDown={(e: React.KeyboardEvent) => {
                               if (e.key === "Enter") handleSaveEdit(user.id);
                               if (e.key === "Escape") handleCancelEdit();
                             }}
@@ -338,7 +338,7 @@ export default function UsersCard() {
                                 onChange={(value) =>
                                   setEditForm({
                                     ...editForm,
-                                    role: value,
+                                    role: value as "admin" | "operator",
                                   })
                                 }
                                 className="w-full"
@@ -381,18 +381,22 @@ export default function UsersCard() {
                           </td>
                           <td className="p-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{user.role}</td>
                           <td className="p-3 text-sm font-medium text-gray-900 dark:text-white flex gap-2 justify-center">
-                            {user.isApproved ? (
-                              <Button size="sm" onClick={() => handleEditUser(user)}>Edit</Button>
-                            ) : (
-                              <Button size="sm" onClick={() => handleApproveUser(user.id)}>Approve</Button>
+                            {user.role !== "admin" && (
+                              <>
+                                {user.isApproved ? (
+                                  <Button size="sm" onClick={() => handleEditUser(user)}>Edit</Button>
+                                ) : (
+                                  <Button size="sm" onClick={() => handleApproveUser(user.id)}>Approve</Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleDeleteUser(user.id, user.name)}
+                                  className="bg-red-500 hover:bg-red-600"
+                                >
+                                  Delete
+                                </Button>
+                              </>
                             )}
-                            <Button
-                              size="sm"
-                              onClick={() => handleDeleteUser(user.id, user.name)}
-                              className="bg-red-500 hover:bg-red-600"
-                            >
-                              Delete
-                            </Button>
                           </td>
                         </>
                       )}

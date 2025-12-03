@@ -65,17 +65,17 @@ export default function InputManualHistoryTable({ rows, meta, onPageChange }: Pr
         <tbody>
             {rows.map((row, idx) => (
             <tr key={idx} className="border-t border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60">
-              <td className="px-3 py-2 text-black dark:text-gray-400">{row.time}</td>
+              <td className="px-3 py-2 text-black dark:text-gray-400">{new Date(row.time).toLocaleString("id-ID")}</td>
               <td className="px-3 py-2 capitalize text-black dark:text-gray-400">{row.operator}</td>
-              <td className="text-center text-red-500">{row.mainR} A</td>
-              <td className="text-center text-yellow-500 dark:">{row.mainS} A</td>
-              <td className="text-center text-blue-500 dark:">{row.mainT} A</td>
-              <td className="text-center text-emerald-500 dark:">{row.oilPressMain} bar</td>
-              <td className="text-center text-emerald-500 dark:">{row.pilotR} A</td>
-              <td className="text-center text-yellow-500 dark:">{row.pilotS} A</td>
-              <td className="text-center text-blue-500 dark:">{row.pilotT} A</td>
-              <td className="text-center text-emerald-500 dark:">{row.oilPressPilot} bar</td>
-              <td className="text-center text-orange-500 dark:">{row.oilTemp} °C</td>
+              <td className="text-center text-red-500">{Number(row.mainR).toFixed(2)} A</td>
+              <td className="text-center text-yellow-500 dark:">{Number(row.mainS).toFixed(2)} A</td>
+              <td className="text-center text-blue-500 dark:">{Number(row.mainT).toFixed(2)} A</td>
+              <td className="text-center text-emerald-500 dark:">{Number(row.oilPressMain).toFixed(2)} bar</td>
+              <td className="text-center text-emerald-500 dark:">{Number(row.pilotR).toFixed(2)} A</td>
+              <td className="text-center text-yellow-500 dark:">{Number(row.pilotS).toFixed(2)} A</td>
+              <td className="text-center text-blue-500 dark:">{Number(row.pilotT).toFixed(2)} A</td>
+              <td className="text-center text-emerald-500 dark:">{Number(row.oilPressPilot).toFixed(2)} bar</td>
+              <td className="text-center text-orange-500 dark:">{Number(row.oilTemp).toFixed(2)} °C</td>
             </tr>
           ))}
         </tbody>

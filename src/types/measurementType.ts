@@ -5,4 +5,4 @@ export type MeasurementDashboard = z.infer<typeof MeasurementDashboardSchema>;
 export type MeasurementSchema = z.infer<typeof MeasurementSchema>;
 export type MeasurementAggregatedQuery = z.infer<typeof MeasurementAggregatedQuerySchema>;
 export type AggregatedDataResponse = z.infer<typeof AggregatedDataResponseSchema>;
-export type AggregatedDataSchema = z.infer<typeof AggregatedDataSchema>;
+export type AggregatedData = z.infer<typeof AggregatedDataSchema>;

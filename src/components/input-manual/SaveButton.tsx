@@ -9,19 +9,21 @@ import { useMutation } from "@tanstack/react-query";
 import { manualInputService } from "@/services/manualInputService"; // Pastikan path ini benar
 import { isInCurrentShiftInterval } from "../utils/shift";
 import Button from "../ui/button/Button";
-import { Row } from "./ManualInputDashboard";
+import { ManualInputTable } from "@/types/manualInputType";
+import { AxiosError } from "axios";
 
 export default function SaveButton({ 
   mqttData, 
   lastManualInput
 }: { 
-  mqttData: RealtimeData | undefined, 
-  lastManualInput: Row | null;
+  mqttData: RealtimeData | null, 
+  lastManualInput: ManualInputTable | null;
 }) {
 
   const { user } = useAuth(); // Anda sudah memiliki 'user'
   const { openModal } = useAuthModal();
   const [capturedData, setCapturedData] = useState<RealtimeData | null>(null);
+
 
   const mutation = useMutation({
       // ✅ 7. Ubah mutationFn untuk mengirim objek berisi data & userId
@@ -35,7 +37,7 @@ export default function SaveButton({
         window.location.reload();
       }, 1000);
     },
-    onError: (error: any) => {
+  onError: (error: AxiosError<{ message?: string }>) => {
 
     if (error.response?.status === 401) {
           
@@ -187,9 +189,7 @@ export default function SaveButton({
             </Button>
           )}
 
-          <h1 className="mt-3 text-gray-500 dark:text-gray-400 text-xl">
-            {lastManualInput?.time ? `Penyimpanan terakhir: ${lastManualInput.time} oleh ${lastManualInput.operator}` : "Belum ada penyimpanan"}
-          </h1>
+          
         </>
       ) : (
         <Button
@@ -199,6 +199,9 @@ export default function SaveButton({
           Sign In Untuk Menyimpan Data
         </Button>
       )}
+      <h1 className="mt-3 text-gray-500 dark:text-gray-400 text-xl">
+        {lastManualInput?.time ? `Penyimpanan terakhir: ${lastManualInput.time} oleh ${lastManualInput.operator}` : "Belum ada penyimpanan"}
+      </h1>
     </div>
   );
 }

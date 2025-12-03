@@ -41,7 +41,7 @@ export const MqttProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const onConnectHandler = () => handleSetStatus("Connected");
     const onCloseHandler = () => handleSetStatus("Disconnected");
-    const onErrorHandler = (err: Error) => handleSetStatus("Error");
+    const onErrorHandler = () => handleSetStatus("Error");
     const onReconnectHandler = () => handleSetStatus("Connecting");
     const onOfflineHandler = () => handleSetStatus("Disconnected");
 

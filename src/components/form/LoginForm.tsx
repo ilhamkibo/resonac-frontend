@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import Cookies from 'js-cookie'; // ✅ 1. Impor js-cookie
 
 // ✅ Impor skema dan tipe yang baru saja kita buat
 import { authSchema, LoginPayload } from "@/validations/authSchema";
@@ -14,9 +13,8 @@ export default function LoginForm() {
   const router = useRouter();
 
   const {
-    register,
     handleSubmit,
-    formState: { errors },
+    // formState: { errors },
   } = useForm<LoginPayload>({ // <-- Gunakan tipe LoginPayload di sini
     resolver: zodResolver(authSchema), // <-- Gunakan skema di sini
   });

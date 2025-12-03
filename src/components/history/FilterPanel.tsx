@@ -9,6 +9,9 @@ import { toast } from "sonner";
 interface FilterPanelProps {
     filters: ReturnType<typeof import("./HistoryDashboard").useDashboardFilters>;
     ChevronDownIcon: React.ElementType;
+    isExporting: boolean; // <-- BARU
+    exportToCSV: () => void;
+
 }
 
 const aggregationTypes: { value: AggregationType; label: string }[] = [
@@ -18,7 +21,7 @@ const aggregationTypes: { value: AggregationType; label: string }[] = [
     { value: "none", label: "None" },
 ];
 
-export default function FilterPanel({ filters, ChevronDownIcon }: FilterPanelProps) {
+export default function FilterPanel({ filters, ChevronDownIcon, exportToCSV, isExporting }: FilterPanelProps) {
     const {
         aggregationType, setAggregationType,
         activeFilterMode, setActiveFilterMode,
@@ -48,6 +51,7 @@ export default function FilterPanel({ filters, ChevronDownIcon }: FilterPanelPro
     };
 
     const handleFilterModeChange = (mode: "period" | "date") => {
+        setAggregationType("none");
         setActiveFilterMode(mode);
         if (mode === "period") {
             // atur ulang Date range
@@ -154,10 +158,10 @@ export default function FilterPanel({ filters, ChevronDownIcon }: FilterPanelPro
                         <div className="relative">
                             <Select
                                 options={[
-                                    { value: "5", label: "5" },
-                                    { value: "10", label: "10" },
-                                    { value: "25", label: "25" },
+                                    { value: "20", label: "20" },
                                     { value: "50", label: "50" },
+                                    { value: "100", label: "100" },
+                                    { value: "200", label: "200" },
                                 ]}
                                 className="border px-2 py-1 rounded text-gray-600 dark:text-gray-400"
                                 onChange={(value) => setLimit(Number(value))}
@@ -171,10 +175,22 @@ export default function FilterPanel({ filters, ChevronDownIcon }: FilterPanelPro
 
                     <Button
                         size="sm"
-                        className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                        onClick={() => alert("Export CSV")}
+                        className="px-4 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-700"
+                        onClick={exportToCSV}
+                        disabled={isExporting} // <-- NONAKTIFKAN saat loading
                     >
-                        Export CSV
+                        {/* ⭐ 5. TAMPILKAN SPINNER SAAT LOADING */}
+                        {isExporting ? (
+                            <div className="flex items-center">
+                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Exporting...
+                            </div>
+                        ) : (
+                            "Export CSV" 
+                        )}
                     </Button>
                 </div>
             </div>

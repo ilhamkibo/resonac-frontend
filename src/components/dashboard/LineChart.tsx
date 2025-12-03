@@ -21,7 +21,7 @@ function createInitialSeries(base: number, variance = 0.05) {
 }
 
 export default function LineChart({ title }: { title: string }) {
-  const [series, setSeries] = useState<any[]>([]);
+  const [series, setSeries] = useState<{ name: string; data: { x: number; y: number }[]}[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

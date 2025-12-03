@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   description: "Resonac Realtime Utility Monitoring Dashboard",
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function Page() {
 
   const getDashboardData = async (area: string) => {

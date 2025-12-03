@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useAuth } from '@/hooks/useAuth'; // ✅ Impor hook
 import SignOutButton from '@/components/auth/SignOutButton'; // ✅ 1. Impor komponen baru
 import { useAuthModal } from "@/context/AuthModalContext";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -58,7 +60,23 @@ export default function Navbar() {
       } ${isMobile ? "mb-10" : ""}`}
     >
       <div className="flex flex-wrap items-center justify-between mx-auto p-4">
-        <a
+        <Link 
+          href="/"
+          className="flex items-center space-x-3 rtl:space-x-reverse"
+          > 
+          {/* <img
+            src="/images/brand/resonac-clean.png"
+            className="h-8"
+            alt="Logo"
+            /> */}
+            <Image
+              src="/images/brand/resonac-clean.png"
+              width={200}
+              height={80}
+              alt="Resonac Logo"
+            />
+        </Link>
+        {/* <a
           href="/"
           className="flex items-center space-x-3 rtl:space-x-reverse"
         >
@@ -67,7 +85,7 @@ export default function Navbar() {
             className="h-8"
             alt="Logo"
           />
-        </a>
+        </a> */}
 
         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse items-center">
           {user ? (
@@ -128,12 +146,18 @@ export default function Navbar() {
         >
           <ul className="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
             <li>
-              <a
+              <Link
+                href="/"
+                className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
+                >Home
+              </Link>
+
+              {/* <a
                 href="/"
                 className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
               >
                 Home
-              </a>
+              </a> */}
             </li>
             <li>
               <a
@@ -151,16 +175,16 @@ export default function Navbar() {
                 Error
               </a>
             </li>
+            <li>
+              <a
+                href="/history"
+                className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/history" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
+              >
+                Logs
+              </a>
+            </li>
             {user &&(
               <>
-                <li>
-                  <a
-                    href="/history"
-                    className={`block py-2 px-3 rounded-sm md:p-0 ${pathname === "/history" ? "bg-blue-700 text-white md:bg-transparent md:text-blue-700 md:dark:text-blue-500" : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:dark:hover:text-blue-500 dark:text-white"}`}
-                  >
-                    Logs
-                  </a>
-                </li>
                 {user.role === "admin" && (
                   <li>
                     <a

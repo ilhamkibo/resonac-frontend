@@ -7,7 +7,7 @@ export const thresholdService = {
         try {
             const response = await axiosInstance.get<ApiResponseWrapper<Threshold[]>>(`/thresholds`, { params: { area } });
             return response.data.data;
-        } catch (error) {
+        } catch {
             throw new Error("Failed to fetch thresholds. Please try again later.");
         }
     },

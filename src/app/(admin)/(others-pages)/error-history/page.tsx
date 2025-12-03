@@ -5,7 +5,8 @@ import React from "react";
 import Link from "next/link"; // Gunakan Link Next.js untuk navigasi/reload
 
 // --- Komponen Inline untuk Tampilan Error yang Lebih Baik ---
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 // Komponen Card Error Sederhana (untuk data perbandingan)
 const SimpleErrorCard = ({ title, message }: { title: string; message: string }) => (
     <div className="flex items-center justify-between p-5 bg-white border-l-4 border-red-500 rounded-lg shadow-md mb-6 transition-all duration-300 hover:shadow-lg">

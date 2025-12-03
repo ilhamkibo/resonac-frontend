@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import SaveButton from "./SaveButton";
@@ -18,20 +18,39 @@ import { RealtimeData } from "@/types/mqttType";
 import ManualInputFilter from "./ManualInputFilter";
 import { Threshold } from "@/types/thresholdType";
 import InputManualHistoryTable from "./InputManualHistoryTable";
+import Button from "../ui/button/Button";
+import ManualInputChart, { ManualChartHandle } from "./ManualInputChart";
+import { toast } from "sonner";
 
 interface DashboardProps {
   thresholds: Threshold[];
   initialManualInputs: ApiResponseWrapper<ManualInputResponse>;
 }
 
+type ExcelRow = {
+  Waktu: string;
+  Operator: string;
+  Main_Ampere_R: number | null;
+  Main_Ampere_S: number | null;
+  Main_Ampere_T: number | null;
+  Main_Oil_Pressure: number | null;
+  Pilot_Ampere_R: number | null;
+  Pilot_Ampere_S: number | null;
+  Pilot_Ampere_T: number | null;
+  Pilot_Oil_Pressure: number | null;
+  Oil_Temp: number | null;
+};
+
+
 const formatServerDataToRow = (input: ManualInput): ManualInputTable => {
-  const mainPump = input.details.find((d: any) => d.area === "main");
-  const pilotPump = input.details.find((d: any) => d.area === "pilot");
-  const oil = input.details.find((d: any) => d.area === "oil");
+  const mainPump = input.details.find(d => d.area === "main");
+  const pilotPump = input.details.find(d => d.area === "pilot");
+  const oil = input.details.find(d => d.area === "oil");
 
   return {
     id: input.id,
-    time: new Date(input.timestamp).toLocaleString("id-ID"),
+    // time: new Date(input.timestamp).toLocaleString("id-ID"),
+    time: input.timestamp,
     operator: input.username,
     oilPressMain: mainPump?.oil_pressure ?? null,
     mainR: mainPump?.ampere_r ?? null,
@@ -45,21 +64,38 @@ const formatServerDataToRow = (input: ManualInput): ManualInputTable => {
   };
 };
 
+const convertToExcelRow = (row: ManualInputTable): ExcelRow => ({
+  Waktu: new Date(row.time).toLocaleString("id-ID"),
+  Operator: row.operator ?? "-",
+  Main_Ampere_R: row.mainR != null ? parseFloat(Number(row.mainR).toFixed(2)) : 0,
+  Main_Ampere_S: row.mainS != null ? parseFloat(Number(row.mainS).toFixed(2)) : 0,
+  Main_Ampere_T: row.mainT != null ? parseFloat(Number(row.mainT).toFixed(2)) : 0,
+  Main_Oil_Pressure: row.oilPressMain != null ? parseFloat(Number(row.oilPressMain).toFixed(2)) : 0,
+  Pilot_Ampere_R: row.pilotR != null ? parseFloat(Number(row.pilotR).toFixed(2)) : 0,
+  Pilot_Ampere_S: row.pilotS != null ? parseFloat(Number(row.pilotS).toFixed(2)) : 0,
+  Pilot_Ampere_T: row.pilotT != null ? parseFloat(Number(row.pilotT).toFixed(2)) : 0,
+  Pilot_Oil_Pressure: row.oilPressPilot != null ? parseFloat(Number(row.oilPressPilot).toFixed(2)) : 0,
+  Oil_Temp: row.oilTemp != null ? parseFloat(Number(row.oilTemp).toFixed(2)) : 0,
+});
+
+
+
 export default function ManualInputDashboard({
   thresholds,
   initialManualInputs
 }: DashboardProps) {
 
-  const mqttData = useMqttSubscription<{ realtime: RealtimeData }>("toho/resonac/value");
-
+  const mqttData = useMqttSubscription<RealtimeData>("toho/resonac/value");
+  const [activeTab, setActiveTab] = useState(0);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(100);
   const [activeFilter, setActiveFilter] = useState<"period" | "date" | null>("period");
 
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("monthly");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   // Memoize query params to pass to service
   const queryParams = useMemo(() => ({
     page,
@@ -72,7 +108,7 @@ export default function ManualInputDashboard({
   }), [page, limit, activeFilter, period, startDate, endDate]);
 
   // Query manual inputs
-  const { data: manualInput, isFetching } = useQuery({
+  const { data: manualInput } = useQuery({
     queryKey: ["manual-inputs", queryParams.page, queryParams.period, queryParams.startDate, queryParams.endDate, queryParams.limit],
     queryFn: () =>
       manualInputService.getManualInputs(queryParams),
@@ -124,13 +160,165 @@ export default function ManualInputDashboard({
       }
     } catch (error) {
       console.error("CSV Export Failed:", error);
-      alert("Gagal mengunduh CSV. Silakan coba lagi.");
+      toast.error("Gagal mengunduh CSV. Silakan coba lagi.");
     } finally {
       // ⭐ 3. SET LOADING FALSE di blok finally (akan selalu dipanggil)
       setIsExporting(false); 
     }
   }, [activeFilter, period, startDate, endDate]);
+
+  const chartRef = useRef<ManualChartHandle>(null);
+
+  // const exportToExcel = useCallback(async () => {
+  //   try {
+  //     setIsExportingExcel(true);
+
+  //     // 1. Ambil data yang tampil di tabel (rows)
+  //     const tableData = rows;
+
+  //     if (!tableData.length) {
+  //       toast.error("Tidak ada data untuk diexport.");
+  //       return;
+  //     }
+
+  //     // 2. Import exceljs secara dynamic agar tidak masuk bundle besar
+  //     const ExcelJS = (await import("exceljs")).default;
+
+  //     const workbook = new ExcelJS.Workbook();
+  //     const sheet = workbook.addWorksheet("Manual Input");
+
+  //     // 3. Buat header
+  //     sheet.columns = Object.keys(tableData[0]).map((col) => ({
+  //       header: col,
+  //       key: col,
+  //       width: 20,
+  //     }));
+
+  //     // 4. Tambah data tabel
+  //     sheet.addRows(tableData);
+
+  //     // 5. Generate file
+  //     const buffer = await workbook.xlsx.writeBuffer();
+  //     const blob = new Blob([buffer], {
+  //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //     });
+
+  //     const url = window.URL.createObjectURL(blob);
+  //     const link = document.createElement("a");
+  //     link.href = url;
+  //     link.download = `manual-input-${Date.now()}.xlsx`;
+  //     link.click();
+
+  //     URL.revokeObjectURL(url);
+  //     toast.success("Export Excel berhasil");
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Gagal export Excel");
+  //   } finally {
+  //     setIsExportingExcel(false);
+  //   }
+  // }, [rows]);
+
   // -------------------------------------------------------------
+
+  const exportToExcel = useCallback(async () => {
+    try {
+      setIsExportingExcel(true);
+
+    const excelRows: ExcelRow[] = rows.map(convertToExcelRow);
+
+    if (excelRows.length === 0) {
+        toast.error("Tidak ada data untuk diexport.");
+        return;
+      }
+
+      // Ambil SEMUA gambar chart
+      const charts = await chartRef.current?.getChartImages();
+      if (!charts) {
+        toast.error("Gagal mengambil gambar grafik.");
+        return;
+      }
+
+      const ExcelJS = (await import("exceljs")).default;
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Manual Input");
+
+      // ==== HEADER ====
+      sheet.columns = [
+        { header: "Waktu", key: "Waktu", width: 22 },
+        { header: "Operator", key: "Operator", width: 18 },
+        { header: "Main_Ampere_R", key: "Main_Ampere_R", width: 18 },
+        { header: "Main_Ampere_S", key: "Main_Ampere_S", width: 18 },
+        { header: "Main_Ampere_T", key: "Main_Ampere_T", width: 18 },
+        { header: "Main_Oil_Pressure", key: "Main_Oil_Pressure", width: 20 },
+        { header: "Pilot_Ampere_R", key: "Pilot_Ampere_R", width: 18 },
+        { header: "Pilot_Ampere_S", key: "Pilot_Ampere_S", width: 18 },
+        { header: "Pilot_Ampere_T", key: "Pilot_Ampere_T", width: 18 },
+        { header: "Pilot_Oil_Pressure", key: "Pilot_Oil_Pressure", width: 20 },
+        { header: "Oil_Temp", key: "Oil_Temp", width: 14 },
+      ];
+
+      // Isi tabel
+      sheet.addRows(excelRows);
+
+      const currentRow = sheet.rowCount + 2;
+
+      // ====== INSERT GAMBAR MAIN ======
+      const mainImageId = workbook.addImage({
+        base64: charts.main,
+        extension: "png",
+      });
+
+      sheet.addImage(mainImageId, {
+        tl: { col: 0, row: currentRow },
+        ext: { width: 540, height: 280 }, // gambar high DPI butuh space lebih besar
+      });
+
+
+      // ====== INSERT GAMBAR PILOT ======
+      const pilotImageId = workbook.addImage({
+        base64: charts.pilot,
+        extension: "png",
+      });
+
+      sheet.addImage(pilotImageId, {
+        tl: { col: 4, row: currentRow },
+        ext: { width: 540, height: 280 }, // gambar high DPI butuh space lebih besar
+      });
+
+      // ====== INSERT GAMBAR OIL ======
+      const oilImageId = workbook.addImage({
+        base64: charts.oil,
+        extension: "png",
+      });
+
+      sheet.addImage(oilImageId, {
+        tl: { col: 8, row: currentRow },
+        ext: { width: 540, height: 280 }, // gambar high DPI butuh space lebih besar
+      });
+
+      // Download file
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `manual-input-${new Date().toLocaleString("id-ID")}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("Export Excel berhasil");
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal export Excel");
+    } finally {
+      setIsExportingExcel(false);
+    }
+  }, [rows]);
 
   const lastManualInput = rows[0];
 
@@ -154,15 +342,37 @@ export default function ManualInputDashboard({
 
   return (
     <div className="p-6">
+      <div className="text-center space-x-4 mb-10">
+        <Button
+          onClick={() => setActiveTab(0)}
+          variant="primary"
+          className={`px-4 py-2 rounded-lg font-medium ${
+            activeTab === 0 ? "bg-blue-600 text-white" : "bg-gray-400 hover:bg-gray-500"
+          }`}
+        >
+          Input Data
+        </Button>
+        <Button
+          onClick={() => setActiveTab(1)}
+          variant="primary"
+          className={`px-4 py-2 rounded-lg font-medium ${
+            activeTab === 1 ? "bg-blue-600 text-white" : "bg-gray-400 hover:bg-gray-500"
+          }`}
+        >
+          History Data
+        </Button>
+      </div>
       
-      {/* Realtime Cards */}
+      {activeTab === 0 ? (
+        <>
+        {/* Realtime Cards */}
       <div className="grid md:grid-cols-2 gap-4">
         <AmpereCardGroup
           title="Main Pump"
           data={[
-            { label: "R", value: mqttData?.realtime?.main?.ampere_r },
-            { label: "S", value: mqttData?.realtime?.main?.ampere_s },
-            { label: "T", value: mqttData?.realtime?.main?.ampere_t },
+            { label: "R", value: mqttData?.main?.ampere_r },
+            { label: "S", value: mqttData?.main?.ampere_s },
+            { label: "T", value: mqttData?.main?.ampere_t },
           ]}
           thresholds={minMaxAmpereMainPump}
         />
@@ -170,9 +380,9 @@ export default function ManualInputDashboard({
         <AmpereCardGroup
           title="Pilot Pump"
           data={[
-            { label: "R", value: mqttData?.realtime?.pilot?.ampere_r },
-            { label: "S", value: mqttData?.realtime?.pilot?.ampere_s },
-            { label: "T", value: mqttData?.realtime?.pilot?.ampere_t },
+            { label: "R", value: mqttData?.pilot?.ampere_r },
+            { label: "S", value: mqttData?.pilot?.ampere_s },
+            { label: "T", value: mqttData?.pilot?.ampere_t },
           ]}
           thresholds={minMaxAmperePilotPump}
         />
@@ -182,15 +392,15 @@ export default function ManualInputDashboard({
         <OilPressureCard
           title="Main Oil Pressure"
           data={{
-            main: mqttData?.realtime?.main?.oil_pressure,
-            pilot: mqttData?.realtime?.pilot?.oil_pressure,
+            main: mqttData?.main?.oil_pressure,
+            pilot: mqttData?.pilot?.oil_pressure,
           }}
           thresholds={minMaxOilPressure}
         />
 
         <OilTemperatureCard
           title="Oil Temperature"
-          data={{ value: mqttData?.realtime?.oil?.temperature }}
+          data={{ value: mqttData?.oil?.temperature }}
           thresholds={minMaxOilTemp}
         />
       </div>
@@ -198,35 +408,47 @@ export default function ManualInputDashboard({
       {/* Save Button */}
       <div className="mt-6">
         <SaveButton 
-          mqttData={mqttData?.realtime} 
+          mqttData={mqttData} 
           lastManualInput={lastManualInput}
         />     
       </div>
 
-      {/* Filters */}
-      <ManualInputFilter
-        isExporting={isExporting} // <-- BARU
-        activeFilter={activeFilter}
-        setActiveFilter={setActiveFilter}
-        period={period}
-        setPeriod={setPeriod}
-        startDate={startDate}
-        endDate={endDate}
-        setStartDate={setStartDate}
-        setEndDate={setEndDate}
-        limit={limit}
-        setLimit={setLimit}
-        exportToCSV={exportToCSV}
-      />
+        </>
+      ) : (
+        <>
+          <div>
+            <ManualInputChart ref={chartRef} ManualinputData={rows} />
+          </div>
 
-      {/* Table */}
-      <div className="mt-6">
-        <InputManualHistoryTable
-          rows={rows}
-          meta={meta}
-          onPageChange={setPage}
-        />
-      </div>
+          <ManualInputFilter
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+            period={period}
+            setPeriod={setPeriod}
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            limit={limit}
+            setLimit={setLimit}
+            exportToCSV={exportToCSV}
+            isExporting={isExporting} // <-- BARU
+            exportToExcel={exportToExcel}   // ← tambahkan ini
+            isExportingExcel={isExportingExcel} // <-- BARU
+          />
+
+          {/* Table */}
+          <div className="mt-6">
+            <InputManualHistoryTable
+              rows={rows}
+              meta={meta}
+              onPageChange={setPage}
+            />
+          </div>
+        </>
+      )}
+      {/* Filters */}
+      
     </div>
   );
 }

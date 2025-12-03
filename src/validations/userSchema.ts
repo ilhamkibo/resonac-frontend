@@ -10,6 +10,14 @@ export const UserSchema = z.object({
   createdAt: z.string().datetime().optional(),
 });
 
+export const UserPayloadSchema = z.object({
+  userId: z.number(),
+  name: z.string(),
+  email: z.string().email(),
+  role: z.enum(['admin', 'operator']),
+  isApproved: z.boolean(),
+  createdAt: z.string().datetime().optional(),
+})
 // Skema untuk memvalidasi query parameter
 export const UserQuerySchema = z.object({
     status: z.enum(['approved', 'unapproved']).optional(),

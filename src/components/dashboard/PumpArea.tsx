@@ -35,8 +35,8 @@ export default function PumpArea({ type, initialMeasurements, initialThresholds 
     initialData: initialThresholds,
   });
 
-  const dataMqtt = useMqttSubscription<{ realtime: RealtimeData }>("toho/resonac/value");
-  const pumpData = dataMqtt?.realtime?.[type];
+  const dataMqtt = useMqttSubscription<RealtimeData >("toho/resonac/value");
+  const pumpData = dataMqtt?.[type];
 
   // ✅ STATE yang digabungkan
   const [ampereChartData, setAmpereChartData] = useState<ChartData>({ series: [], categories: [] });
@@ -128,12 +128,12 @@ export default function PumpArea({ type, initialMeasurements, initialThresholds 
 
   // ✅ Threshold di-memoize agar tidak dihitung ulang setiap render
   const upper = useMemo(() => {
-    const thresholdAmp = thresholdData?.find((t: any) => t.parameter === "ampere");
+    const thresholdAmp = thresholdData?.find((t: Threshold) => t.parameter === "ampere");
     return thresholdAmp?.upperLimit ?? 120;
   }, [thresholdData]);
 
   const { upperPressure, lowerPressure } = useMemo(() => {
-    const thresholdPressure = thresholdData?.find((t: any) => t.parameter === "pressure");
+    const thresholdPressure = thresholdData?.find((t: Threshold) => t.parameter === "pressure");
     return {
       upperPressure: thresholdPressure?.upperLimit ?? 120,
       lowerPressure: thresholdPressure?.lowerLimit ?? 0,
@@ -165,7 +165,10 @@ export default function PumpArea({ type, initialMeasurements, initialThresholds 
         },
       },
     },
-    yaxis: { labels: { formatter: (val) => `${val.toFixed(0)} A` } },
+    yaxis: { 
+      max: upper + 5,
+      labels: { formatter: (val) => `${val.toFixed(0)} A` } 
+    },
     annotations: {
       yaxis: [
         {

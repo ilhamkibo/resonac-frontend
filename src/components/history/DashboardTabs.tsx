@@ -1,4 +1,5 @@
 // components/dashboard/DashboardTabs.tsx
+import Button from "../ui/button/Button";
 import { Area } from "./HistoryDashboard";
 
 interface DashboardTabsProps {
@@ -10,7 +11,7 @@ export default function DashboardTabs({ activeTab, setActiveTab }: DashboardTabs
     return (
         <div className="flex space-x-4 justify-center">
             {(["main", "pilot", "oil"] as Area[]).map((tab) => (
-            <button
+            <Button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 rounded-lg font-medium ${
@@ -18,7 +19,7 @@ export default function DashboardTabs({ activeTab, setActiveTab }: DashboardTabs
                 }`}
             >
                 {tab === "main" ? "Main Pump" : tab === "pilot" ? "Pilot Pump" : "Oil Temp"}
-            </button>
+            </Button>
             ))}
         </div>
     );

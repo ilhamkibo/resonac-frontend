@@ -1,7 +1,6 @@
 "use client";
 
 import DailyInfo from "@/components/dashboard/DailyInfo";
-import { useSidebar } from "@/context/SidebarContext";
 import Navbar from "@/layout/Navbar";
 import React from "react";
 
@@ -10,14 +9,14 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  // const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
   // Dynamic class for main content margin based on sidebar state
-  const mainContentMargin = isMobileOpen
-    ? "ml-0"
-    : isExpanded || isHovered
-    ? "lg:ml-[290px]"
-    : "lg:ml-[90px]";
+  // const mainContentMargin = isMobileOpen
+  //   ? "ml-0"
+  //   : isExpanded || isHovered
+  //   ? "lg:ml-[290px]"
+  //   : "lg:ml-[90px]";
 
   return (
     <div className="min-h-screen xl:flex">
