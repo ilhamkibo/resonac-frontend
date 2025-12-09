@@ -102,6 +102,9 @@ export function OilTemperatureCard({ title, data, thresholds }: TempCardProps) {
       curve: "smooth", 
       width: 3 
     },
+    markers: {
+      size: 4,
+    },
     colors: ["#22c55e"], // Warna hijau untuk suhu
     grid: { 
       borderColor: "#334155", 

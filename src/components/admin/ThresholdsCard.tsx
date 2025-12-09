@@ -5,21 +5,29 @@ import {
   Threshold,
   UpdateThresholdInput,
 } from "@/types/thresholdType";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  useQuery, 
+  useMutation, 
+  // useQueryClient 
+} from "@tanstack/react-query";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import Button from "../ui/button/Button";
-import { useMqtt } from "@/context/MqttContext"; // ✅ Import MQTT context
+// import { useMqtt } from "@/context/MqttContext"; // ✅ Import MQTT context
 
 export default function ThresholdsCard() {
-  const queryClient = useQueryClient();
-  const { status, publish } = useMqtt(); // ✅ Dapatkan fungsi publish dari context
+  // const queryClient = useQueryClient();
+  // const { 
+  //   status,
+  //   publish 
+  // } = useMqtt(); // ✅ Dapatkan fungsi publish dari context
 
   const {
     data: thresholds,
     isLoading,
     isError,
     error,
+    refetch
   } = useQuery<Threshold[], Error>({
     queryKey: ["thresholds"],
     queryFn: () => thresholdService.getAllThreshold(),
@@ -37,15 +45,14 @@ export default function ThresholdsCard() {
       thresholdService.updateThreshold(id, data),
     onSuccess: () => {
       toast.success("Threshold updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["thresholds"] });
+      // queryClient.invalidateQueries({ queryKey: ["thresholds"] });
       setEditingId(null);
-
-      try {
-        publish("toho/resonac/config/reload", { updated: true, timestamp: Date.now() });
-        console.log("✅ MQTT message published to toho/resonac/config/reload");
-      } catch (err) {
-        console.error("❌ Failed to publish MQTT reload message", err);
-      }
+      refetch();
+      // try {
+      //   publish("toho/resonac/config/reload", { updated: true, timestamp: Date.now() });
+      // } catch (err) {
+      //   console.error("❌ Failed to publish MQTT reload message", err);
+      // }
     },
     onError: (err: Error) => {
       toast.error(`Update failed: ${err.message}`);
@@ -66,10 +73,6 @@ export default function ThresholdsCard() {
 
   const handleUpdate = () => {
     if (!editingId) return;
-    if (status !== "Connected") {
-      toast.error(`MQTT connection is in ${status} status. Please make sure MQTT is connected.`);
-      return;
-    }
     updateMutation.mutate({
       id: editingId,
       data: {

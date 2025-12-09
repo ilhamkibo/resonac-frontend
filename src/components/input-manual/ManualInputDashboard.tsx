@@ -108,11 +108,11 @@ export default function ManualInputDashboard({
   }), [page, limit, activeFilter, period, startDate, endDate]);
 
   // Query manual inputs
-  const { data: manualInput } = useQuery({
+  const { data: manualInput, refetch } = useQuery({
     queryKey: ["manual-inputs", queryParams.page, queryParams.period, queryParams.startDate, queryParams.endDate, queryParams.limit],
     queryFn: () =>
       manualInputService.getManualInputs(queryParams),
-    placeholderData: initialManualInputs
+      placeholderData: initialManualInputs
   });
 
   const rows: ManualInputTable[] = useMemo(() => {
@@ -124,20 +124,16 @@ export default function ManualInputDashboard({
   const meta = manualInput?.data?.meta;
 
   const exportToCSV = useCallback(async () => {
-    // 1. Dapatkan parameter filter (Hapus page dan limit)
     const exportQuery = {
         ...(activeFilter === "period" ? { period } : {}),
         ...(activeFilter === "date" && startDate && endDate
           ? { startDate, endDate }
           : {}),
-        // Tidak perlu limit dan page di sini karena service API akan mengambil semua
     };
 
     setIsExporting(true);
 
     try {
-      // 2. Panggil service API Export yang mengembalikan string CSV
-      // Asumsi: manualInputService.exportManualInputsCsv sudah diimplementasikan
       const csvString = await manualInputService.exportManualInputsCsv(exportQuery);
 
       // 3. Buat dan unduh file
@@ -168,58 +164,6 @@ export default function ManualInputDashboard({
   }, [activeFilter, period, startDate, endDate]);
 
   const chartRef = useRef<ManualChartHandle>(null);
-
-  // const exportToExcel = useCallback(async () => {
-  //   try {
-  //     setIsExportingExcel(true);
-
-  //     // 1. Ambil data yang tampil di tabel (rows)
-  //     const tableData = rows;
-
-  //     if (!tableData.length) {
-  //       toast.error("Tidak ada data untuk diexport.");
-  //       return;
-  //     }
-
-  //     // 2. Import exceljs secara dynamic agar tidak masuk bundle besar
-  //     const ExcelJS = (await import("exceljs")).default;
-
-  //     const workbook = new ExcelJS.Workbook();
-  //     const sheet = workbook.addWorksheet("Manual Input");
-
-  //     // 3. Buat header
-  //     sheet.columns = Object.keys(tableData[0]).map((col) => ({
-  //       header: col,
-  //       key: col,
-  //       width: 20,
-  //     }));
-
-  //     // 4. Tambah data tabel
-  //     sheet.addRows(tableData);
-
-  //     // 5. Generate file
-  //     const buffer = await workbook.xlsx.writeBuffer();
-  //     const blob = new Blob([buffer], {
-  //       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //     });
-
-  //     const url = window.URL.createObjectURL(blob);
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.download = `manual-input-${Date.now()}.xlsx`;
-  //     link.click();
-
-  //     URL.revokeObjectURL(url);
-  //     toast.success("Export Excel berhasil");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Gagal export Excel");
-  //   } finally {
-  //     setIsExportingExcel(false);
-  //   }
-  // }, [rows]);
-
-  // -------------------------------------------------------------
 
   const exportToExcel = useCallback(async () => {
     try {
@@ -262,29 +206,29 @@ export default function ManualInputDashboard({
       // Isi tabel
       sheet.addRows(excelRows);
 
-      const currentRow = sheet.rowCount + 2;
+      let currentRow = sheet.rowCount + 2;
 
-      // ====== INSERT GAMBAR MAIN ======
-      const mainImageId = workbook.addImage({
-        base64: charts.main,
+      // ====== INSERT GAMBAR MAIN PRESSURE ======
+      const mainPressureImageId = workbook.addImage({
+        base64: charts.mainPressure,
         extension: "png",
       });
 
-      sheet.addImage(mainImageId, {
+      sheet.addImage(mainPressureImageId, {
         tl: { col: 0, row: currentRow },
-        ext: { width: 540, height: 280 }, // gambar high DPI butuh space lebih besar
+        ext: { width: 600, height: 353 }, // gambar high DPI butuh space lebih besar
       });
 
 
-      // ====== INSERT GAMBAR PILOT ======
-      const pilotImageId = workbook.addImage({
-        base64: charts.pilot,
+      // ====== INSERT GAMBAR PILOT PRESSURE ======
+      const pilotPressureImageId = workbook.addImage({
+        base64: charts.pilotPressure,
         extension: "png",
       });
 
-      sheet.addImage(pilotImageId, {
-        tl: { col: 4, row: currentRow },
-        ext: { width: 540, height: 280 }, // gambar high DPI butuh space lebih besar
+      sheet.addImage(pilotPressureImageId, {
+        tl: { col: 5, row: currentRow },
+        ext: { width: 600, height: 353 }, // gambar high DPI butuh space lebih besar
       });
 
       // ====== INSERT GAMBAR OIL ======
@@ -294,8 +238,32 @@ export default function ManualInputDashboard({
       });
 
       sheet.addImage(oilImageId, {
-        tl: { col: 8, row: currentRow },
-        ext: { width: 540, height: 280 }, // gambar high DPI butuh space lebih besar
+        tl: { col: 10, row: currentRow },
+        ext: { width: 600, height: 353 }, // gambar high DPI butuh space lebih besar
+      });
+
+      currentRow += 19; // beri jarak aman
+
+      // ====== INSERT GAMBAR MAIN AMPERE ======
+      const mainAmpereImageId = workbook.addImage({
+        base64: charts.mainAmpere,
+        extension: "png",
+      });
+
+      sheet.addImage(mainAmpereImageId, {
+        tl: { col: 0, row: currentRow },
+        ext: { width: 700, height: 353 }, // gambar high DPI butuh space lebih besar
+      });
+
+      // ====== INSERT GAMBAR PILOT AMPERE ======
+      const pilotAmpereImageId = workbook.addImage({
+        base64: charts.pilotAmpere,
+        extension: "png",
+      });
+
+      sheet.addImage(pilotAmpereImageId, {
+        tl: { col: 6, row: currentRow },
+        ext: { width: 700, height: 353 }, // gambar high DPI butuh space lebih besar
       });
 
       // Download file
@@ -410,6 +378,7 @@ export default function ManualInputDashboard({
         <SaveButton 
           mqttData={mqttData} 
           lastManualInput={lastManualInput}
+          refetch={refetch}
         />     
       </div>
 
@@ -417,7 +386,7 @@ export default function ManualInputDashboard({
       ) : (
         <>
           <div>
-            <ManualInputChart ref={chartRef} ManualinputData={rows} />
+            <ManualInputChart ref={chartRef} ManualinputData={rows} thresholds={thresholds} />
           </div>
 
           <ManualInputFilter
@@ -447,8 +416,6 @@ export default function ManualInputDashboard({
           </div>
         </>
       )}
-      {/* Filters */}
-      
     </div>
   );
 }

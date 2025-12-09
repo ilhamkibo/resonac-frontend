@@ -20,6 +20,7 @@ export type OilData = {
 
 // Tipe gabungan untuk semua data realtime
 export type RealtimeData = {
+  on: number;
   main: PumpData;
   pilot: PumpData;
   oil: OilData;

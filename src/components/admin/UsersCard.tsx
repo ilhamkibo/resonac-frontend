@@ -13,6 +13,7 @@ import UserStatsCards from './UserStatsCards';
 import Select from '../form/Select';
 import { ChevronDownIcon } from 'lucide-react';
 import Label from '../form/Label';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function UsersCard() {
   const [query, setQuery] = useState<UserQuery>({
@@ -30,6 +31,7 @@ export default function UsersCard() {
     isApproved: false,
     role: 'operator',
   });
+  const { user } = useAuth(); // ✅ Gunakan hook untuk mendapatkan data user
 
   const queryClient = useQueryClient();
 
@@ -95,15 +97,6 @@ export default function UsersCard() {
       toast.error((error as Error).message || "Failed to update user.");
     },
   });
-
-  // const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const { name, value } = e.target;
-  //   setQuery(prev => ({
-  //     ...prev,
-  //     [name]: value || undefined,
-  //     page: '1',
-  //   }));
-  // };
 
   const handleDeleteUser = (id: number | string, name: string) => {
     setUserToDelete(id);
@@ -226,9 +219,9 @@ export default function UsersCard() {
               </thead>
               <tbody>
                 {users.length > 0 ? (
-                  users.filter((user) => user.name !== "ilham").map((user, index) => (
-                    <tr key={user.id} className={index % 2 === 0 ? "bg-white dark:bg-gray-800" : "dark:bg-gray-700 bg-gray-100"}>
-                      {editingUserId === user.id ? (
+                  users.map((userTable, index) => (
+                    <tr key={userTable.id} className={index % 2 === 0 ? "bg-white dark:bg-gray-800" : "dark:bg-gray-700 bg-gray-100"}>
+                      {editingUserId === userTable.id ? (
                         <>
                           <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
                             <input
@@ -236,7 +229,7 @@ export default function UsersCard() {
                               value={editForm.email}
                               onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                                onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit(user.id);
+                                if (e.key === "Enter") handleSaveEdit(userTable.id);
                                 if (e.key === "Escape") handleCancelEdit();
                               }}
                               className={`w-full px-2 py-1 text-left rounded-md outline-none transition ${
@@ -253,7 +246,7 @@ export default function UsersCard() {
                               value={editForm.name}
                               onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit(user.id);
+                                if (e.key === "Enter") handleSaveEdit(userTable.id);
                                 if (e.key === "Escape") handleCancelEdit();
                               }}
                               className={`w-full px-2 py-1 text-left rounded-md outline-none transition ${
@@ -264,23 +257,9 @@ export default function UsersCard() {
                               }
                             />
                           </td>
-                          {/* <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
-                            <select
-                              value={editForm.isApproved ? "approved" : "unapproved"}
-                              onChange={(e) => setEditForm({ ...editForm, isApproved: e.target.value === "approved" })}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit(user.id);
-                                if (e.key === "Escape") handleCancelEdit();
-                              }}
-                              className="w-full px-2 py-1 border dark:border-gray-600 border-gray-200 rounded-md bg-gray-100 dark:bg-gray-800 dark:text-white"
-                            >
-                              <option value="approved">Approved</option>
-                              <option value="unapproved">Unapproved</option>
-                            </select>
-                          </td> */}
                           <td
                               onKeyDown={(e: React.KeyboardEvent) => {
-                              if (e.key === "Enter") handleSaveEdit(user.id);
+                              if (e.key === "Enter") handleSaveEdit(userTable.id);
                               if (e.key === "Escape") handleCancelEdit();
                             }}
                             className="p-3 text-sm font-medium text-gray-900 dark:text-white"
@@ -305,24 +284,9 @@ export default function UsersCard() {
                               </span>
                             </div>
                           </td>
-
-                          {/* <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
-                            <select
-                              value={editForm.role}
-                              onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSaveEdit(user.id);
-                                if (e.key === "Escape") handleCancelEdit();
-                              }}
-                              className="w-full px-2 py-1 border dark:border-gray-600 border-gray-200 rounded-md bg-gray-100 dark:bg-gray-800 dark:text-white"
-                            >
-                              <option value="operator">Operator</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                          </td> */}
                           <td 
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveEdit(user.id);
+                              if (e.key === "Enter") handleSaveEdit(userTable.id);
                               if (e.key === "Escape") handleCancelEdit();
                             }}
                             tabIndex={0}
@@ -352,7 +316,7 @@ export default function UsersCard() {
                           <td className="p-3 flex gap-2 justify-center">
                             <Button
                               size="sm"
-                              onClick={() => handleSaveEdit(user.id)}
+                              onClick={() => handleSaveEdit(userTable.id)}
                               disabled={updateMutation.isPending}
                               className="bg-green-500 hover:bg-green-600 disabled:bg-green-300"
                             >
@@ -370,31 +334,55 @@ export default function UsersCard() {
                         </>
                       ) : (
                         <>
-                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">{user.email}</td>
-                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">{user.name}</td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">{userTable.email}</td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">{userTable.name}</td>
                           <td className="p-3 text-sm font-medium text-gray-900 dark:text-white">
-                            {user.isApproved ? (
+                            {userTable.isApproved ? (
                               <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
                             ) : (
                               <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Unapproved</span>
                             )}
                           </td>
-                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{user.role}</td>
+                          <td className="p-3 text-sm font-medium text-gray-900 dark:text-white capitalize">{userTable.role}</td>
                           <td className="p-3 text-sm font-medium text-gray-900 dark:text-white flex gap-2 justify-center">
-                            {user.role !== "admin" && (
+                            {user?.email !== userTable.email && (
                               <>
-                                {user.isApproved ? (
-                                  <Button size="sm" onClick={() => handleEditUser(user)}>Edit</Button>
-                                ) : (
-                                  <Button size="sm" onClick={() => handleApproveUser(user.id)}>Approve</Button>
+                                {/* Jika belum approve */}
+                                {!userTable.isApproved && (
+                                  <>
+                                    <Button size="sm" onClick={() => handleApproveUser(userTable.id)}>
+                                      Approve
+                                    </Button>
+
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleDeleteUser(userTable.id, userTable.name)}
+                                      className="bg-red-500 hover:bg-red-600"
+                                    >
+                                      Delete
+                                    </Button>
+                                  </>
                                 )}
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleDeleteUser(user.id, user.name)}
-                                  className="bg-red-500 hover:bg-red-600"
-                                >
-                                  Delete
-                                </Button>
+
+                                {/* Jika sudah approve */}
+                                {userTable.isApproved && (
+                                  <>
+                                    <Button size="sm" onClick={() => handleEditUser(userTable)}>
+                                      Edit
+                                    </Button>
+
+                                    {/* Hanya operator boleh delete, admin tidak */}
+                                    {userTable.role === "operator" && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleDeleteUser(userTable.id, userTable.name)}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Delete
+                                      </Button>
+                                    )}
+                                  </>
+                                )}
                               </>
                             )}
                           </td>

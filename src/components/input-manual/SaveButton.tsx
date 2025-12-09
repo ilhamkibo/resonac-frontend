@@ -14,10 +14,12 @@ import { AxiosError } from "axios";
 
 export default function SaveButton({ 
   mqttData, 
-  lastManualInput
+  lastManualInput,
+  refetch
 }: { 
   mqttData: RealtimeData | null, 
   lastManualInput: ManualInputTable | null;
+  refetch: () => void
 }) {
 
   const { user } = useAuth(); // Anda sudah memiliki 'user'
@@ -33,9 +35,10 @@ export default function SaveButton({
       toast.success("Data berhasil disimpan!");
       
       setCapturedData(null);
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      refetch();
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 1000);
     },
   onError: (error: AxiosError<{ message?: string }>) => {
 
@@ -58,7 +61,7 @@ export default function SaveButton({
       const res = isInCurrentShiftInterval(lastManualInput.time);
 
       if (res.reason === "unparseable") {
-        console.warn("Tidak bisa parse timestamp lastManualInput:", lastManualInput.time);
+        toast.error("Tidak bisa parse timestamp lastManualInput. Coba lagi.");
       }
 
       if (res.isInCurrentShift) {
@@ -72,17 +75,21 @@ export default function SaveButton({
     }
 
     if (mqttData) {
+      if (mqttData.on === 0) {
+        toast.error("Mesin dalam keadaan OFF. Coba lagi sesaat.");
+        return;
+      }
       setCapturedData(mqttData);
       toast.info("Data terbaru telah diambil. Silakan periksa dan simpan.");
     } else {
       toast.error("Data MQTT tidak tersedia. Coba lagi sesaat.");
     }
   };
-
+  
   const handleSaveData = () => {
     if (!capturedData) {
-    toast.error("Tidak ada data yang diambil.");
-    return;
+      toast.error("Tidak ada data yang diambil.");
+      return;
     }
       
     // ✅ 8. Tambahkan pengecekan untuk user dan user.id
@@ -124,14 +131,14 @@ export default function SaveButton({
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Main Pump</h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere R</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.main.ampere_r} A</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere S</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.main.ampere_s} A</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere T</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.main.ampere_t} A</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere R</span><span className="font-medium text-gray-900 dark:text-white">{Number(capturedData.main.ampere_r).toFixed(2)} A</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere S</span><span className="font-medium text-gray-900 dark:text-white">{Number(capturedData.main.ampere_s).toFixed(2)} A</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere T</span><span className="font-medium text-gray-900 dark:text-white">{Number(capturedData.main.ampere_t).toFixed(2)} A</span></div>
                     {/* Catatan: Data MQTT Anda menunjukkan 'oil_pressure: 96'. 
                       Jika Anda perlu menampilkannya sebagai '9.6' atau '3.3' seperti di dashboard, 
                       Anda mungkin perlu melakukan konversi (misal: capturedData.main.oil_pressure / 10) 
                     */}
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Oil Pressure</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.main.oil_pressure}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Oil Pressure</span><span className="font-medium text-gray-900 dark:text-white">{Number(capturedData.main.oil_pressure).toFixed(2)}</span></div>
                   </div>
                 </div>
 
@@ -139,10 +146,25 @@ export default function SaveButton({
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Pilot Pump</h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere R</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.pilot.ampere_r} A</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere S</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.pilot.ampere_s} A</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Ampere T</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.pilot.ampere_t} A</span></div>
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Oil Pressure</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.pilot.oil_pressure}</span></div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Ampere R</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {Number(capturedData.pilot.ampere_r).toFixed(2)} A
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Ampere S</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {Number(capturedData.pilot.ampere_s).toFixed(2)} A
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500 dark:text-gray-400">Ampere T</span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {Number(capturedData.pilot.ampere_t).toFixed(2)} A
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Oil Pressure</span><span className="font-medium text-gray-900 dark:text-white">{Number(capturedData.pilot.oil_pressure).toFixed(2)}</span></div>
                   </div>
                 </div>
 
@@ -150,7 +172,7 @@ export default function SaveButton({
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Oil Data</h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Temperature</span><span className="font-medium text-gray-900 dark:text-white">{capturedData.oil.temperature} °C</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">Temperature</span><span className="font-medium text-gray-900 dark:text-white">{Number(capturedData.oil.temperature).toFixed(2)} °C</span></div>
                   </div>
                 </div>
               </div>
@@ -185,7 +207,7 @@ export default function SaveButton({
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
 
             >
-              Ambil Data Manual
+              Input Data Log Manual
             </Button>
           )}
 
@@ -200,7 +222,7 @@ export default function SaveButton({
         </Button>
       )}
       <h1 className="mt-3 text-gray-500 dark:text-gray-400 text-xl">
-        {lastManualInput?.time ? `Penyimpanan terakhir: ${lastManualInput.time} oleh ${lastManualInput.operator}` : "Belum ada penyimpanan"}
+        {lastManualInput?.time ? `Penyimpanan terakhir: ${new Date(lastManualInput.time).toLocaleString()} oleh ${lastManualInput.operator}` : "Belum ada penyimpanan"}
       </h1>
     </div>
   );

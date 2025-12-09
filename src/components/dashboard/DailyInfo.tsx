@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { useMqttSubscription } from "@/lib/hooks/useMqttSubscription";
-import { NotificationData } from "@/types/mqttType";
+import { NotificationData, RealtimeData } from "@/types/mqttType";
 import { useMqtt } from "@/context/MqttContext";
 import Image from "next/image";
 
@@ -11,6 +11,7 @@ export default function DailyInfo() {
   const notification = useMqttSubscription<{ notificatin: NotificationData }>(
     "toho/resonac/notify"
   );
+  const mqttData = useMqttSubscription<RealtimeData>("toho/resonac/value");
   const { status, reconnect } = useMqtt();
 
   const [mounted, setMounted] = useState(false);
@@ -107,11 +108,6 @@ export default function DailyInfo() {
     <div className="grid grid-cols-2 xl:grid-cols-3 items-center text-gray-600 dark:text-gray-200 text-center md:text-2xl text-lg">
       {/* 🏢 Logo */}
       <div className="text-left">
-        {/* <img
-          src="/images/brand/resonac-clean.png"
-          alt="logo"
-          className="w-60 -ml-8"
-        /> */}
         <Image
           src="/images/brand/resonac-clean.png"
           alt="Resonac Logo"
@@ -174,6 +170,26 @@ export default function DailyInfo() {
               </button>
             )}
           </div>
+        )}
+
+        {status === "Connected" && !isPlcError && (
+          mqttData?.on ? (
+            <>
+              |
+              <div className="text-sm inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-800">
+                <span className="w-2 h-2 rounded-full bg-green-600" />
+                <span>Machine On</span>
+              </div>
+            </>
+          ) : (
+            <>
+              |
+              <div className="text-sm inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-800">
+                <span className="w-2 h-2 rounded-full bg-red-600" />
+                <span>Machine Off</span>
+              </div>
+            </>
+          )
         )}
 
         {/* ⏰ Clock */}

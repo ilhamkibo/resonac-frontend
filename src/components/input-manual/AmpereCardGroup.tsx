@@ -70,6 +70,10 @@ export function AmpereCardGroup({ title, data, thresholds }: AmpereCardProps) {
         speed: 800 
       } 
     }, 
+    markers: {
+      size: 4,
+      colors: colors,
+    },
     stroke: { 
       curve: "smooth", 
       width: 3 
@@ -102,7 +106,7 @@ export function AmpereCardGroup({ title, data, thresholds }: AmpereCardProps) {
 
   return (
     <div className="relative p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-700 shadow-md">
-      <div className="absolute -top-3 left-4 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-2 text-sm font-medium border border-slate-100 dark:border-slate-700 rounded-md">
+      <div className="absolute -top-3 left-4 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 px-2 text-lg font-medium border border-slate-100 dark:border-slate-700 rounded-md">
         {title}
       </div>
       <div className="text-center font-semibold text-lg mb-3 text-gray-700 dark:text-gray-300">
